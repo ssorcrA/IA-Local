@@ -1,0 +1,85 @@
+╔══════════════════════════════════════════════════════════════╗
+║                    TICKET D'ERREUR AD                        ║
+╚══════════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-05 14:23:35
+🔢 OCCURRENCES: 10
+⚠️  TYPE: ERROR
+
+─────────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Application Error
+  • Event ID: 1000
+  • Ordinateur: Serveur-IA.DOMAD.axen
+
+─────────────────────────────────────────────────────────────
+
+📝 HISTORIQUE DES OCCURRENCES:
+
+[1] Mon Jan  5 12:55:18 2026 - Record #375
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'SnippingTool.exe, 10.0.20348.143, 237609ab, ntdll.dll, 10.0....
+
+
+[2] Mon Jan  5 11:32:16 2026 - Record #370
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'powershell.exe, 10.0.20348.1, d6360dfa, KERNELBASE.dll, 10.0...
+
+[3] Mon Jan  5 12:55:18 2026 - Record #375
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'SnippingTool.exe, 10.0.20348.143, 237609ab, ntdll.dll, 10.0....
+
+[4] Mon Jan  5 11:32:16 2026 - Record #370
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'powershell.exe, 10.0.20348.1, d6360dfa, KERNELBASE.dll, 10.0...
+
+[5] Mon Jan  5 12:55:18 2026 - Record #375
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'SnippingTool.exe, 10.0.20348.143, 237609ab, ntdll.dll, 10.0....
+
+[6] Mon Jan  5 11:32:16 2026 - Record #370
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'powershell.exe, 10.0.20348.1, d6360dfa, KERNELBASE.dll, 10.0...
+
+[7] Mon Jan  5 12:55:18 2026 - Record #375
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'SnippingTool.exe, 10.0.20348.143, 237609ab, ntdll.dll, 10.0....
+
+[8] Mon Jan  5 11:32:16 2026 - Record #370
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'powershell.exe, 10.0.20348.1, d6360dfa, KERNELBASE.dll, 10.0...
+
+[9] Mon Jan  5 12:55:18 2026 - Record #375
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'SnippingTool.exe, 10.0.20348.143, 237609ab, ntdll.dll, 10.0....
+
+[10] Mon Jan  5 11:32:16 2026 - Record #370
+    Message: <The description for Event ID ( 1000 ) in Source ( 'Application Error' ) could not be found. It contains the following insertion string(s):'powershell.exe, 10.0.20348.1, d6360dfa, KERNELBASE.dll, 10.0...
+─────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+🔍 RECHERCHE MANUELLE REQUISE
+
+Event ID: 1000
+Source: Application Error
+Ordinateur: Serveur-IA.DOMAD.axen
+
+🌐 Le navigateur edge a été ouvert avec la recherche.
+
+🔗 URL de recherche:
+https://www.google.com/search?q=Event+ID+1000+Application+Error+solution+Windows&hl=fr&lr=lang_fr
+
+📚 RESSOURCES RECOMMANDÉES:
+• Microsoft Docs: https://docs.microsoft.com/windows/
+• Event ID Database: https://www.eventid.net/search.asp?evtid=1000
+• Recherche Google en français avec les mots-clés:
+  "Event ID 1000 Application Error solution"
+
+💡 ÉTAPES DE RÉSOLUTION:
+1. Consulter les résultats de recherche ouverts dans le navigateur
+2. Vérifier l'Observateur d'événements pour plus de détails
+3. Identifier si l'erreur est récurrente ou ponctuelle
+4. Rechercher dans la base de connaissances Microsoft
+5. Vérifier les mises à jour Windows disponibles
+6. Consulter les forums techniques spécialisés
+
+
+─────────────────────────────────────────────────────────────
+
+📌 STATUT: NOUVEAU
+🔍 NÉCESSITE ACTION: OUI
+⏰ DERNIÈRE MISE À JOUR: 2026-01-05 15:16:06
+
+═══════════════════════════════════════════════════════════════
