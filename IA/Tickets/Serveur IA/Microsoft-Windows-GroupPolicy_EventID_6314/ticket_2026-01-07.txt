@@ -1,0 +1,86 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🤖 SERVEUR IA - 🟢 🟢 BASSE 4/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-07 15:13:43
+📊 OCCURRENCES: 1
+🔍 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟢 BASSE 4/10
+📌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: 🤖 Serveur IA
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-GroupPolicy
+  • Event ID: 6314
+  • Première détection: Wed Jan  7 14:17:16 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'1057662, false, 500, 0, 1, %%4113'.>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Wed Jan  7 14:17:16 2026 - Record #4711
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'1057662, false, 500, 0, 1, %%4113'.>...
+
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+🔍 DIAGNOSTIC:
+Erreur détectée - Event ID 6314 depuis Microsoft-Windows-GroupPolicy
+Aucun service d'analyse IA n'est actuellement disponible.
+
+🎯 ANALYSE AUTOMATIQUE:
+Cette erreur nécessite une investigation manuelle. Voici quelques pistes:
+
+⚡ ACTIONS IMMÉDIATES RECOMMANDÉES:
+1. Consulter l'Observateur d'événements Windows pour plus de détails
+2. Rechercher "Event ID 6314 Microsoft-Windows-GroupPolicy" sur Google
+3. Vérifier les logs complets de l'application concernée
+4. Consulter la documentation Microsoft ou du fabricant
+
+🛠️ RESSOURCES UTILES:
+• Event ID Database: https://www.eventid.net/search.asp?evtid=6314
+• Microsoft Docs: https://docs.microsoft.com/windows/
+• TechNet Forums: https://social.technet.microsoft.com/
+
+🔒 RECOMMANDATIONS:
+1. Démarrez Ollama pour obtenir des analyses IA détaillées:
+   - API: http://localhost:11434
+   - Interface: http://localhost:3000
+   
+2. Ou configurez une clé API externe:
+   - Anthropic Claude (ANTHROPIC_API_KEY)
+   - OpenAI GPT (OPENAI_API_KEY)
+   - Groq (GROQ_API_KEY)
+
+💡 CONSEIL:
+Pour des analyses précises et rapides, assurez-vous qu'Ollama est démarré
+avec le modèle 'llama3.2:latest' installé.
+
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-07 15:13:43
+📈 TENDANCE: NOUVELLE DÉTECTION
+
+═══════════════════════════════════════════════════════════

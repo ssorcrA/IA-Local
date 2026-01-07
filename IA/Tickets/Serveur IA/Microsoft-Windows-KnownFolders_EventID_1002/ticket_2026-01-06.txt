@@ -1,0 +1,77 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🤖 SERVEUR IA - 🟡 🟡 MOYENNE 6/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-06 14:26:21
+📊 OCCURRENCES: 2
+🔍 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟡 MOYENNE 6/10
+📌 STATUT: 🟡 MOYENNE - SURVEILLANCE NÉCESSAIRE
+🏷️ CATÉGORIE: 🤖 Serveur IA
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-KnownFolders
+  • Event ID: 1002
+  • Première détection: Tue Jan  6 07:44:36 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] WIN-227B0C74SN2.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 1002 ) in Source ( 'Microsoft-Windows-KnownFolders' ) could not be found. It contains the following insertion string(s):'0x80070002, {fdd39ad0-238f-46af-adb4-6c85480369c7}, C:\\Windows\\system32\\config\\systemprofile\\Documents'.>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Tue Jan  6 07:44:36 2026 - Record #1705
+    Computer: WIN-227B0C74SN2.DOMAD.axen
+    Message: <The description for Event ID ( 1002 ) in Source ( 'Microsoft-Windows-KnownFolders' ) could not be found. It contains the following insertion string(s):'0x80070002, {fdd39ad0-238f-46af-adb4-6c85480369...
+
+
+[2] Tue Jan  6 07:44:36 2026 - Record #1705
+    Computer: WIN-227B0C74SN2.DOMAD.axen
+    Message: <The description for Event ID ( 1002 ) in Source ( 'Microsoft-Windows-KnownFolders' ) could not be found. It contains the following insertion string(s):'0x80070002, {fdd39ad0-238f-46af-adb4-6c85480369...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+🔍 DIAGNOSTIC:
+Erreur Windows détectée - Event ID 1002 depuis Microsoft-Windows-KnownFolders
+
+🎯 ANALYSE AUTOMATIQUE:
+Cette erreur nécessite une investigation manuelle car aucun service d'analyse IA n'est disponible.
+
+⚡ ACTIONS RECOMMANDÉES:
+1. Consulter l'Observateur d'événements Windows pour plus de détails
+2. Rechercher "Event ID 1002 Microsoft-Windows-KnownFolders" sur Google
+3. Vérifier les logs complets de l'application concernée
+4. Consulter la documentation Microsoft
+
+🛠️ RESSOURCES:
+- Event ID Database: https://www.eventid.net/search.asp?evtid=1002
+- Microsoft Docs: https://docs.microsoft.com/windows/
+
+💡 CONSEIL:
+Configurez une clé API (Anthropic, OpenAI ou Groq) pour obtenir des analyses IA détaillées.
+
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📋 PLANIFIER une intervention
+  2. 🔍 VÉRIFIER si le problème persiste
+  3. 🛠️ APPLIQUER les correctifs recommandés
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: OUI
+⏰ DERNIÈRE MISE À JOUR: 2026-01-06 15:07:46
+📈 TENDANCE: STABLE (2 occurrences)
+
+═══════════════════════════════════════════════════════════
