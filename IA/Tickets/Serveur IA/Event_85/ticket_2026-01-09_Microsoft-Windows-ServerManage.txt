@@ -1,0 +1,108 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🤖 SERVEUR IA - 🟢 🟢 BASSE 4/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-09 14:30:21
+📊 OCCURRENCES: 2
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟢 BASSE 4/10
+📌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: 🤖 Serveur IA
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-ServerManager-ManagementProvider
+  • Event ID: 85
+  • Première détection: Fri Jan  9 13:59:02 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 85 ) in Source ( 'Microsoft-Windows-ServerManager-ManagementProvider' ) could not be found. It contains the following insertion string(s):'Microsoft/Windows/NPAS:$reports$\\$latestreport$\\Discovery.xml:$creationtime$, 0x2, 0x3'.>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Fri Jan  9 13:59:02 2026 - Record #6272
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 85 ) in Source ( 'Microsoft-Windows-ServerManager-ManagementProvider' ) could not be found. It contains the following insertion string(s):'Microsoft/Windows/NPAS:$repor...
+
+
+[2] Fri Jan  9 14:49:02 2026 - Record #6402
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 85 ) in Source ( 'Microsoft-Windows-ServerManager-ManagementProvider' ) could not be found. It contains the following insertion string(s):'Microsoft/Windows/NPAS:$repor...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+**Analyse de l'erreur**
+
+L'erreur rapportée est un événement WARNING (type d'erreur 85) généré par le gestionnaire des serveurs Windows Server Manager, qui indique qu'il n'est pas possible de trouver la description de l'événement dans la source Microsoft-Windows-ServerManager-ManagementProvider.
+
+**Diagnostique**
+
+Le problème est probablement lié à une erreur de configuration ou d'installation du gestionnaire des serveurs. Cette erreur peut avoir un impact sur les opérations des serveurs, car elle peut empêcher le gestionnaire des serveurs de fonctionner correctement et de gérer les mises à jour et les patchs.
+
+**Niveau de gravité**
+
+La gravité de cette erreur est faible (3/10), car il n'y a pas de risque immédiat pour la sécurité ou la stabilité du système.
+
+**Causes probables**
+
+Voici trois causes possibles :
+
+1. **Erreur de configuration de l'API des serveurs Windows Server** : L'erreur pourrait être due à une erreur de configuration de l'API des serveurs Windows Server, qui est utilisée par le gestionnaire des serveurs.
+2. **Problème avec les mises à jour du gestionnaire des serveurs** : Il est possible que le gestionnaire des serveurs ait été mis à jour récemment et qu'il y ait eu une erreur de configuration ou d'installation.
+3. **Erreur dans la base de données des serveurs Windows Server** : L'erreur pourrait être due à une erreur dans la base de données des serveurs Windows Server, qui est utilisée par le gestionnaire des serveurs pour stocker les informations sur les serveurs.
+
+**Solution immédiate (< 5 minutes)**
+
+Pour contenir le problème, il est recommandé de suivre ces étapes :
+
+1. Arrêter le service de gestionnaire des serveurs : `net stop wmservice`
+2. Vérifier si le service est en cours d'exécution : `tasklist | findstr wmservice`
+3. Rester en attente pendant 30 secondes pour que le service se termine.
+4. Redémarrer le service de gestionnaire des serveurs : `net start wmservice`
+
+**Résolution complète (solution durable)**
+
+Pour résoudre définitivement le problème, il est recommandé de suivre ces étapes :
+
+1. **Vérifier la configuration de l'API des serveurs Windows Server** :
+ * Ouvrir la console de gestion des services et sélectionner le service de gestionnaire des serveurs.
+ * Clicquer sur "Propriétés" et vérifier que la valeur de "Parité" est set à "Faites-le-moi".
+2. **Mettre à jour les mises à jour du gestionnaire des serveurs** :
+ * Ouvrir la console de gestion des mises à jour et sélectionner l'option "Mises à jour du gestionnaire des serveurs".
+ * Mettre à jour les mises à jour pour résoudre le problème.
+3. **Vérifier la base de données des serveurs Windows Server** :
+ * Ouvrir la console de gestion des bases de données et sélectionner la base de données des serveurs Windows Server.
+ * Vérifier que les tables et colonnes sont correctement configurées.
+
+**Prévention**
+
+Pour éviter la récurrence, il est recommandé de suivre ces bonnes pratiques :
+
+* Mettre à jour régulièrement les mises à jour du gestionnaire des serveurs.
+* Vérifier les logs du service de gestionnaire des serveurs pour détecter tout problème potentiel.
+* Effectuer des vérifications régulières de la configuration et des données de base des serveurs Windows Server.
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-09 15:15:46
+📈 TENDANCE: STABLE (2 occurrences)
+
+═══════════════════════════════════════════════════════════

@@ -1,0 +1,105 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🖥️ SERVEUR AD - 🟡 🟡 MOYENNE 5/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-09 14:21:31
+📊 OCCURRENCES: 2
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟡 MOYENNE 5/10
+📌 STATUT: 🟡 MOYENNE - SURVEILLANCE NÉCESSAIRE
+🏷️ CATÉGORIE: 🖥️ Serveur AD
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-SystemDataArchiver
+  • Event ID: 2051
+  • Première détection: Fri Jan  9 13:56:00 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS failed with error 1 for volume path '\\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\', skipping query of its disks.".>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Fri Jan  9 13:56:00 2026 - Record #6263
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+
+[2] Fri Jan  9 14:41:00 2026 - Record #6387
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+**Analyse de l'erreur**
+
+L'erreur reportée est un message d'avertissement (Type 3/10) émis par le système Windows Server, qui indique que la commande `IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS` a échoué avec une erreur 1 pour le volume spécifique `\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\`. Cette erreur peut se produire lorsque le système ne peut pas récupérer les informations sur les disques du système.
+
+**Diagnostic**
+
+*   Explication claire du problème : Le système Windows Server n'a pas pu récupérer les informations sur les disques du volume spécifique, ce qui pourrait être dû à une erreur de configuration ou à un problème technique.
+*   Impact sur le système/réseau : L'erreur peut ne pas avoir d'impact direct sur la stabilité du système, mais elle peut être un signe d'un problème sous-jacent qui devrait être résolu pour éviter des problèmes futurs.
+*   Niveau de gravité réel : La gravité de l'erreur est modérée (3/10), car il s'agit d'une erreur technique plutôt que d'une vulnérabilité de sécurité majeure.
+
+**Causes probables**
+
+1.  **Problème de configuration des disques** : Il est possible que la configuration des disques du système soit incorrecte ou incomplète, ce qui empêche le système de récupérer les informations nécessaires.
+2.  **Problème technique avec les disques** : Les disques physiques peuvent être endommagés ou avoir une erreur de lecture, ce qui empêche le système de récupérer les informations sur eux.
+3.  **Problème de drivers** : Les pilotes de disque peuvent être obsolètes ou non mises à jour correctement, ce qui peut provoquer des problèmes lors de l'accès aux disques.
+
+**Solution immédiate (< 5 minutes)**
+
+1.  Vérifiez la configuration des disques du système pour s'assurer qu'il n'y a pas d'erreur ou de problème de configuration.
+2.  Exécutez la commande `chkdsk` avec le paramètre `/f` pour vérifier les disques et corriger tout problème de formatage.
+
+**Exemple de commande :**
+```bash
+chkdsk C: /f
+```
+
+3.  Vérifiez que les pilotes de disque sont à jour et correctement configurés.
+
+**Règle générale :**
+
+*   Exécutez `chkdsk` régulièrement pour maintenir la santé des disques et éviter les problèmes futurs.
+*   Assurez-vous d'avoir les pilotes de disque à jour et correctement configurés pour éviter les erreurs.
+
+**Résolution complète (solution durable)**
+
+1.  Vérifiez la configuration des disques du système pour s'assurer qu'il n'y a pas d'erreur ou de problème de configuration.
+2.  Exécutez la commande `chkdsk` avec le paramètre `/f` pour vérifier les disques et corriger tout problème de formatage.
+3.  Vérifiez que les pilotes de disque sont à jour et correctement configurés.
+4.  Assurez-vous d'avoir un système de sauvegarde régulier pour protéger vos données en cas de panne du système.
+
+**Prévention**
+
+*   Exécutez `chkdsk` régulièrement pour maintenir la santé des disques et éviter les problèmes futurs.
+*   Assurez-vous d'avoir les pilotes de disque à jour et correctement configurés pour éviter les erreurs.
+*   Mettez en place un système de sauvegarde régulier pour protéger vos données en cas de panne du système.
+
+En résumé, l'erreur reportée est une erreur technique qui peut être résolue en vérifiant la configuration des disques et en exécutant la commande `chkdsk`. Il est également important de prendre des mesures préventives pour éviter les problèmes futurs, comme exécuter régulièrement `chkdsk` et avoir les pilotes de disque à jour.
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📋 PLANIFIER une intervention
+  2. 🔍 VÉRIFIER si le problème persiste
+  3. 🛠️ APPLIQUER les correctifs recommandés
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: OUI
+⏰ DERNIÈRE MISE À JOUR: 2026-01-09 15:07:45
+📈 TENDANCE: STABLE (2 occurrences)
+
+═══════════════════════════════════════════════════════════

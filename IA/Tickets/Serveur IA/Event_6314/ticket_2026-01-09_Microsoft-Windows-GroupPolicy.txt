@@ -1,0 +1,134 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🤖 SERVEUR IA - 🟢 🟢 BASSE 4/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-09 14:11:22
+📊 OCCURRENCES: 4
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟢 BASSE 4/10
+📌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: 🤖 Serveur IA
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-GroupPolicy
+  • Event ID: 6314
+  • Première détection: Fri Jan  9 13:25:46 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'3901295, false, 500, 0, 1, %%4113'.>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Fri Jan  9 13:25:46 2026 - Record #6183
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'3901295, false, 500, 0, 1, %%4113'.>...
+
+
+[2] Fri Jan  9 13:55:47 2026 - Record #6262
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'3901228, false, 500, 0, 1, %%4113'.>...
+
+[3] Fri Jan  9 14:10:47 2026 - Record #6306
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'3901393, false, 500, 0, 1, %%4113'.>...
+
+[4] Fri Jan  9 14:40:48 2026 - Record #6386
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'1, false, 500, 0, 1, %%4113'.>...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+**Analyse de l'erreur 6314 dans Microsoft-Windows-GroupPolicy**
+
+**1. Diagnostic**
+
+L'erreur 6314 est un événement de groupe de sécurité qui indique que la description d'un événement d'ID spécifique (ID 6314) provenant du source 'Microsoft-Windows-GroupPolicy' n'a pas pu être trouvée. Cela peut entraîner des problèmes avec la gestion des groupes et des politiques de sécurité.
+
+L'impact sur le système est potentiellement faible, mais cela peut également affecter la stabilité et la sécurité du système en général. La gravité de l'erreur est donc modérée.
+
+**2. Causes probables**
+
+Voici 3 causes possibles pour cette erreur :
+
+*   **1. Mise à jour du groupe de sécurité**
+    *   Probabilité : Élevée
+    *   Contexte technique : Une mise à jour récente du groupe de sécurité pourrait avoir affecté la disponibilité de la description d'un événement spécifique.
+*   **2. Erreur dans les fichiers de configuration du groupe de sécurité**
+    *   Probabilité : Moyenne
+    *   Contexte technique : Un erreur dans les fichiers de configuration du groupe de sécurité pourrait empêcher le système d'accéder à la description d'un événement spécifique.
+*   **3. Problème de mise à jour des bases de données de groupe de sécurité**
+    *   Probabilité : Faible
+    *   Contexte technique : Un problème avec les bases de données du groupe de sécurité pourrait empêcher le système d'accéder à la description d'un événement spécifique.
+
+**3. Solution immédiate (< 5 minutes)**
+
+Voici des actions à faire immédiatement pour contenir le problème :
+
+1.  **Vérifiez les journaux du groupe de sécurité**
+    *   Exécutez la commande `Get-EventLog -Source Microsoft-Windows-GroupPolicy` dans PowerShell ou CMD pour afficher les journaux récents du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présent dans les journaux et si elle contient toute information utile sur la cause de l'erreur.
+2.  **Vérifiez les fichiers de configuration du groupe de sécurité**
+    *   Exécutez la commande `Get-GroupPolicyObject -Name <nom du groupe>` pour afficher le contenu des fichiers de configuration du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présente dans les fichiers de configuration et si elle contient toute information utile sur la cause de l'erreur.
+
+**4. Résolution complète (solution durable)**
+
+Voici une procédure détaillée pour résoudre ce problème :
+
+*   **Étape 1 : Vérifiez les journaux du groupe de sécurité**
+    *   Exécutez la commande `Get-EventLog -Source Microsoft-Windows-GroupPolicy` dans PowerShell ou CMD pour afficher les journaux récents du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présent dans les journaux et si elle contient toute information utile sur la cause de l'erreur.
+
+*   **Étape 2 : Vérifiez les fichiers de configuration du groupe de sécurité**
+    *   Exécutez la commande `Get-GroupPolicyObject -Name <nom du groupe>` pour afficher le contenu des fichiers de configuration du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présente dans les fichiers de configuration et si elle contient toute information utile sur la cause de l'erreur.
+
+*   **Étape 3 : Mise à jour des bases de données du groupe de sécurité**
+    *   Exécutez la commande `gpupdate /force` pour mettre à jour les bases de données du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est résolue après avoir mis à jour les bases de données.
+
+*   **Étape 4 : Vérification des fichiers de configuration**
+    *   Exécutez la commande `Get-GroupPolicyObject -Name <nom du groupe>` pour afficher le contenu des fichiers de configuration du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présente dans les fichiers de configuration et si elle contient toute information utile sur la cause de l'erreur.
+
+**5. Prévention**
+
+Voici quelques mesures pour éviter la récurrence :
+
+*   **Vérifier régulièrement les journaux du groupe de sécurité**
+    *   Exécutez la commande `Get-EventLog -Source Microsoft-Windows-GroupPolicy` dans PowerShell ou CMD pour afficher les journaux récents du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présent dans les journaux et si elle contient toute information utile sur la cause de l'erreur.
+
+*   **Mettre à jour régulièrement les bases de données du groupe de sécurité**
+    *   Exécutez la commande `gpupdate /force` pour mettre à jour les bases de données du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est résolue après avoir mis à jour les bases de données.
+
+*   **Vérifier régulièrement les fichiers de configuration du groupe de sécurité**
+    *   Exécutez la commande `Get-GroupPolicyObject -Name <nom du groupe>` pour afficher le contenu des fichiers de configuration du groupe de sécurité.
+    *   Vérifiez si l'erreur 6314 est présente dans les fichiers de configuration et si elle contient toute information utile sur la cause de l'erreur.
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-09 15:04:21
+📈 TENDANCE: STABLE (4 occurrences)
+
+═══════════════════════════════════════════════════════════

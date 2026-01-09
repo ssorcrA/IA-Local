@@ -1,5 +1,5 @@
 """
-Lecteur de logs Syslog - DÉTECTION GARANTIE ULTRA-SENSIBLE
+Lecteur de logs Syslog - DÉTECTION ULTRA-SENSIBLE
 Fichier : syslog_reader.py - VERSION CORRIGÉE
 """
 import os
@@ -16,28 +16,44 @@ class SyslogReader:
         '192.168.1.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡'}
     }
     
-    # MOTS-CLÉS CRITIQUES - ULTRA-SENSIBLE (mots simples)
+    # MOTS-CLÉS CRITIQUES - DÉTECTION MAXIMALE
     CRITICAL_KEYWORDS = {
         # Niveau 10 - CRITIQUE
         'attack': 10, 'intrusion': 10, 'breach': 10, 'hack': 10, 
         'exploit': 10, 'malware': 10, 'unauthorized': 10, 'denied': 10,
-        'critical': 10, 'emergency': 10, 'panic': 10,
+        'critical': 10, 'emergency': 10, 'panic': 10, 'crit': 10,
         
         # Niveau 9 - TRÈS HAUTE
         'blocked': 9, 'block': 9, 'deny': 9, 'drop': 9, 
-        'dropped': 9, 'reject': 9, 'rejected': 9,
+        'dropped': 9, 'reject': 9, 'rejected': 9, 'alert': 9,
         
         # Niveau 8 - HAUTE
         'fail': 8, 'failed': 8, 'failure': 8, 'error': 8, 'err': 8,
+        'fatal': 8, 'severe': 8,
         
         # Niveau 7 - MOYENNE-HAUTE  
-        'alert': 7, 'timeout': 7, 'unreachable': 7, 'down': 7,
+        'timeout': 7, 'unreachable': 7, 'down': 7, 'offline': 7,
         
         # Niveau 6 - MOYENNE
-        'warning': 6, 'warn': 6,
+        'warning': 6, 'warn': 6, 'problem': 6, 'issue': 6,
         
         # Niveau 5 - BASSE
+        'notice': 5, 'info': 5,
+        
+        # Niveau 4 - TRÈS BASSE
+        'debug': 4,
+    }
+    
+    # Niveaux de sévérité syslog standard
+    SYSLOG_SEVERITY = {
+        'emerg': 10, 'emergency': 10,
+        'alert': 9,
+        'crit': 10, 'critical': 10,
+        'err': 8, 'error': 8,
+        'warn': 6, 'warning': 6,
         'notice': 5,
+        'info': 4, 'informational': 4,
+        'debug': 3
     }
     
     def __init__(self, log_callback=None):
@@ -46,6 +62,7 @@ class SyslogReader:
         self.last_position = 0
         self.last_check_time = None
         self.processed_lines = set()
+        self.stop_requested = False
     
     def log(self, message):
         if self.log_callback:
@@ -55,6 +72,15 @@ class SyslogReader:
                 print(message)
         else:
             print(message)
+    
+    def request_stop(self):
+        """Demande l'arrêt de la lecture"""
+        self.stop_requested = True
+        self.log("🛑 Arrêt demandé pour le lecteur Syslog")
+    
+    def reset_stop(self):
+        """Réinitialise le flag d'arrêt"""
+        self.stop_requested = False
     
     def get_priority_emoji(self, priority):
         """Cercles colorés"""
@@ -75,11 +101,24 @@ class SyslogReader:
             raise Exception(f"Fichier Syslog introuvable: {self.syslog_path}")
         
         try:
-            with open(self.syslog_path, 'r', encoding='utf-8', errors='ignore') as f:
-                f.read(100)
+            # Tester la lecture avec différents encodages
+            encodings = ['utf-8', 'latin-1', 'cp1252']
+            working_encoding = None
+            
+            for encoding in encodings:
+                try:
+                    with open(self.syslog_path, 'r', encoding=encoding, errors='replace') as f:
+                        f.read(100)
+                    working_encoding = encoding
+                    break
+                except:
+                    continue
+            
+            if not working_encoding:
+                raise Exception("Impossible de lire le fichier avec les encodages testés")
             
             size_mb = os.path.getsize(self.syslog_path) / (1024 * 1024)
-            self.log(f"✓ Fichier Syslog détecté: {size_mb:.2f} MB")
+            self.log(f"✓ Fichier Syslog détecté: {size_mb:.2f} MB (encodage: {working_encoding})")
             return True
         except PermissionError:
             raise Exception("Accès refusé au fichier Syslog")
@@ -140,26 +179,55 @@ class SyslogReader:
             return None
     
     def get_event_priority(self, log_entry):
-        """Calcule la priorité - DÉTECTION SIMPLE ET EFFICACE"""
+        """Calcule la priorité - DÉTECTION MAXIMALE"""
         max_score = 0
+        found_keywords = []
         
         # Recherche avec mots-clés simples (case insensitive)
         full_text = f"{log_entry['facility']} {log_entry['message']}".lower()
         
-        # Chercher chaque mot-clé
+        # 1. Chercher les niveaux de sévérité syslog
+        for severity, score in self.SYSLOG_SEVERITY.items():
+            # Chercher comme mot entier ou entre crochets [ALERT]
+            if re.search(rf'\b{severity}\b|\[{severity}\]', full_text, re.IGNORECASE):
+                if score > max_score:
+                    max_score = score
+                    found_keywords.append(f"{severity}({score})")
+        
+        # 2. Chercher chaque mot-clé critique
         for keyword, score in self.CRITICAL_KEYWORDS.items():
             if keyword in full_text:
                 if score > max_score:
                     max_score = score
-                    self.log(f"      🔍 Mot-clé trouvé: '{keyword}' (score {score})")
+                found_keywords.append(f"{keyword}({score})")
+        
+        # 3. Patterns spéciaux pour équipements réseau
+        patterns = [
+            (r'connection\s+(failed|refused|timeout)', 7),
+            (r'authentication\s+fail', 8),
+            (r'link\s+down', 7),
+            (r'port\s+(down|disabled)', 6),
+            (r'memory\s+(full|exceeded)', 8),
+            (r'cpu\s+(overload|high)', 7),
+            (r'packet\s+(drop|loss)', 6),
+            (r'unable\s+to', 6),
+            (r'cannot\s+', 6),
+            (r'unavailable', 6),
+        ]
+        
+        for pattern, score in patterns:
+            if re.search(pattern, full_text, re.IGNORECASE):
+                if score > max_score:
+                    max_score = score
+                found_keywords.append(f"pattern:{pattern}({score})")
+        
+        # Debug: afficher ce qui a été trouvé
+        if found_keywords and max_score >= 5:
+            self.log(f"      🔍 Détecté: {', '.join(found_keywords[:3])}")
         
         # Score par défaut si rien trouvé
         if max_score == 0:
-            # Vérifier si c'est vraiment vide ou juste info
-            if any(word in full_text for word in ['info', 'debug', 'notice']):
-                max_score = 4
-            else:
-                max_score = 5  # Par défaut = moyenne
+            max_score = 4  # Par défaut = basse priorité
         
         return max_score
     
@@ -172,7 +240,7 @@ class SyslogReader:
         # Calculer priorité
         priority = self.get_event_priority(log_entry)
         
-        # SEUIL DE FILTRAGE ABAISSÉ: >= 4 (au lieu de 5)
+        # SEUIL DE FILTRAGE TRÈS BAS: >= 4
         if priority < 4:
             return False, f"Priorité trop basse ({priority})"
         
@@ -216,20 +284,49 @@ class SyslogReader:
         errors_found = 0
         warnings_found = 0
         
+        # Réinitialiser le flag d'arrêt
+        self.reset_stop()
+        
         try:
             self.log(f"📂 Lecture du fichier Syslog...")
             
-            with open(self.syslog_path, 'r', encoding='utf-8', errors='ignore') as f:
-                if self.last_position > 0:
-                    f.seek(self.last_position)
-                
-                lines = f.readlines()
-                self.last_position = f.tell()
+            # Essayer différents encodages
+            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+            lines = None
+            used_encoding = None
             
-            self.log(f"   📋 {len(lines)} lignes à analyser...")
+            for encoding in encodings:
+                try:
+                    with open(self.syslog_path, 'r', encoding=encoding, errors='replace') as f:
+                        # Lire TOUTES les lignes
+                        all_lines = f.readlines()
+                        
+                        # Si on a un last_position, ne garder que les nouvelles lignes
+                        if self.last_position > 0:
+                            lines = all_lines[self.last_position:]
+                        else:
+                            lines = all_lines
+                        
+                        # Mettre à jour la position
+                        self.last_position = len(all_lines)
+                        
+                    used_encoding = encoding
+                    break
+                except Exception as e:
+                    continue
             
-            # TRAITEMENT AVEC DEBUG
+            if lines is None:
+                raise Exception("Impossible de lire le fichier")
+            
+            self.log(f"   📋 {len(lines)} lignes à analyser (encodage: {used_encoding})...")
+            
+            # TRAITEMENT AVEC SUPPORT D'ARRÊT
             for i, line in enumerate(lines):
+                # Vérifier si arrêt demandé toutes les 50 lignes
+                if i % 50 == 0 and self.stop_requested:
+                    self.log(f"   🛑 Arrêt demandé à la ligne {i+1}/{len(lines)}")
+                    break
+                
                 total_lines += 1
                 
                 if not line.strip():
@@ -240,9 +337,9 @@ class SyslogReader:
                 if log_entry:
                     parsed_lines += 1
                     
-                    # Afficher le parsing toutes les 100 lignes
-                    if parsed_lines % 100 == 0:
-                        self.log(f"   ... {parsed_lines} lignes parsées")
+                    # Afficher parsing toutes les 200 lignes
+                    if parsed_lines % 200 == 0:
+                        self.log(f"   ... {parsed_lines}/{total_lines} lignes analysées")
                     
                     # Filtrer par date
                     if since_time and log_entry['timestamp'] < since_time:
@@ -263,32 +360,31 @@ class SyslogReader:
                         else:
                             warnings_found += 1
             
-            # AFFICHAGE PROPRE FINAL
-            self.log(f"\n📊 RÉSULTAT:")
-            self.log(f"   • Total scanné: {total_lines} lignes")
-            self.log(f"   • Lignes parsées: {parsed_lines}")
-            self.log(f"   • Erreurs trouvées: {errors_found}")
-            self.log(f"   • Warnings trouvés: {warnings_found}")
-            self.log(f"   • TOTAL INCIDENTS: {len(events)}")
-            
-            # Afficher sources avec cercles
-            if events:
-                sources = {}
-                for event in events:
-                    source = event['source']
-                    sources[source] = sources.get(source, 0) + 1
-                
-                self.log(f"\n📋 Sources d'erreurs trouvées:")
-                for source, count in sorted(sources.items(), key=lambda x: x[1], reverse=True):
-                    max_priority = max(e['_priority'] for e in events if e['source'] == source)
-                    emoji = self.get_priority_emoji(max_priority)
-                    self.log(f"   {emoji} {source}: {count} incident(s)")
-            else:
-                self.log(f"\n⚠️ AUCUN ÉVÉNEMENT DÉTECTÉ !")
-                self.log(f"   • Lignes totales: {total_lines}")
+            # AFFICHAGE FINAL
+            if not self.stop_requested:
+                self.log(f"\n📊 RÉSULTAT SYSLOG:")
+                self.log(f"   • Total scanné: {total_lines} lignes")
                 self.log(f"   • Lignes avec IP surveillée: {parsed_lines}")
-                if parsed_lines > 0:
-                    self.log(f"   • Toutes les lignes ont été filtrées (priorité < 4)")
+                self.log(f"   • Erreurs détectées: {errors_found}")
+                self.log(f"   • Warnings détectés: {warnings_found}")
+                self.log(f"   • TOTAL INCIDENTS: {len(events)}")
+                
+                # Afficher sources avec cercles
+                if events:
+                    sources = {}
+                    for event in events:
+                        source = event['source']
+                        sources[source] = sources.get(source, 0) + 1
+                    
+                    self.log(f"\n📋 Sources d'incidents trouvées:")
+                    for source, count in sorted(sources.items(), key=lambda x: x[1], reverse=True):
+                        max_priority = max(e['_priority'] for e in events if e['source'] == source)
+                        emoji = self.get_priority_emoji(max_priority)
+                        self.log(f"   {emoji} {source}: {count} incident(s)")
+                else:
+                    self.log(f"\n✅ Aucun incident détecté (seuil: priorité >= 4)")
+            else:
+                self.log(f"\n⚠️ Lecture interrompue: {len(events)} événements avant arrêt")
             
             self.last_check_time = datetime.now()
             return events
@@ -324,4 +420,5 @@ class SyslogReader:
         """Reset"""
         self.last_position = 0
         self.processed_lines.clear()
+        self.stop_requested = False
         self.log("🔄 Lecteur Syslog réinitialisé")

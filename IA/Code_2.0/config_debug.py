@@ -1,8 +1,12 @@
+"""
+Configuration avec MODE DEBUG activé
+Fichier : config.py - REMPLACER TEMPORAIREMENT pour debug
+"""
 import os
 from pathlib import Path
 
 APP_NAME = "AD Log Monitor Pro"
-APP_VERSION = "3.0"
+APP_VERSION = "3.0-DEBUG"
 
 LOG_FILE = r"C:\IA\JournalTransfert\ForwardedEvents.evtx"
 OUTPUT_DIR = r"C:\IA\Tickets"
@@ -12,8 +16,9 @@ SYSLOG_PATH = r"\\SRV-SYSLOG\surveillence$\syslog"
 SYSLOG_ARCHIVE_PATH = r"\\SRV-SYSLOG\surveillence$\archive"
 LOCAL_LOGS_PATH = r"C:\IA\Logs"
 
-POLLING_INTERVAL = 60
-INITIAL_CHECK_HOURS = 24
+# CORRECTIF: Intervalle réduit pour tests (30 secondes au lieu de 60)
+POLLING_INTERVAL = 30  # Réduit pour détecter plus vite
+INITIAL_CHECK_HOURS = 2  # Réduit de 24 à 2 heures pour tests plus rapides
 CLEANUP_DAYS = 30
 MAX_EVENTS_PER_CYCLE = 100
 
@@ -33,8 +38,14 @@ WEB_SEARCH_ENABLED = True
 WEB_SEARCH_TIMEOUT = 10
 MAX_WEB_RESULTS = 3
 
-MIN_PRIORITY_THRESHOLD = 4
+# CORRECTIF: Seuil abaissé de 4 à 3 pour capturer plus d'événements
+MIN_PRIORITY_THRESHOLD = 3  # Abaissé pour tests
 ENABLE_ONLINE_SEVERITY_CHECK = True
+
+# MODE DEBUG
+DEBUG_MODE = True  # Active les logs détaillés
+VERBOSE_SYSLOG = True  # Active le mode verbose pour Syslog
+VERBOSE_EVENTS = True  # Active le mode verbose pour ForwardedEvents
 
 SMTP_ENABLED = False
 SMTP_SERVER = "smtp.office365.com"
@@ -104,9 +115,9 @@ def validate_config():
             pass
     
     if not ollama_available:
-        issues.append("Ollama n'est pas accessible. Vérifiez qu'il est démarré.")
+        issues.append("Ollama n'est pas accessible.")
     if not ollama_available and not any([ANTHROPIC_API_KEY, OPENAI_API_KEY, GROQ_API_KEY]):
-        issues.append("Aucune API d'IA configurée (ni Ollama, ni API externe)")
+        issues.append("Aucune API d'IA configurée")
     return issues
 
 def get_ollama_url():
@@ -134,6 +145,8 @@ def get_ollama_web_url():
 if __name__ == "__main__":
     print(f"Configuration {APP_NAME} v{APP_VERSION}")
     print("=" * 60)
+    print("\n⚠️  MODE DEBUG ACTIVÉ")
+    print("=" * 60)
     ensure_directories()
     print("✓ Répertoires créés")
     issues = validate_config()
@@ -145,3 +158,8 @@ if __name__ == "__main__":
         print("\n✅ Configuration valide")
     print(f"\n🤖 URL Ollama API: {get_ollama_url()}")
     print(f"🌐 URL Ollama Web: {get_ollama_web_url()}")
+    print(f"\n📊 PARAMÈTRES DEBUG:")
+    print(f"  • Polling: {POLLING_INTERVAL}s (réduit pour tests)")
+    print(f"  • Check initial: {INITIAL_CHECK_HOURS}h (réduit pour tests)")
+    print(f"  • Seuil priorité: {MIN_PRIORITY_THRESHOLD}/10 (abaissé)")
+    print(f"  • Mode verbose: Activé")
