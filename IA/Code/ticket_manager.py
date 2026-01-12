@@ -1,6 +1,7 @@
 """
-Gestionnaire de tickets avec organisation par CATÉGORIES D'APPAREILS
-Fichier : ticket_manager.py - VERSION CATÉGORISÉE
+Gestionnaire de tickets avec STRUCTURE CORRECTE
+Fichier : ticket_manager.py - VERSION CORRIGÉE
+CORRECTIF: Catégorie > Event_ID > Tickets
 """
 import os
 import json
@@ -10,9 +11,8 @@ from config import OUTPUT_DIR, CLEANUP_DAYS
 
 
 class TicketManager:
-    """Gère les tickets avec organisation par catégories d'appareils"""
+    """Gère les tickets avec organisation : Catégorie/Event_ID/tickets"""
     
-    # CATÉGORIES D'APPAREILS
     DEVICE_CATEGORIES = {
         'Serveur AD': {
             'keywords': ['DC', 'Active Directory', 'LDAP', 'DNS', 'Kerberos', 'NTDS', 'DFS'],
@@ -25,7 +25,7 @@ class TicketManager:
             'priority_boost': 1
         },
         'Stormshield': {
-            'keywords': ['192.168.1.254', 'Stormshield', 'firewall', 'utm'],
+            'keywords': ['192.168.1.254', '192.168.10.254', 'Stormshield', 'firewall', 'utm'],
             'icon': '🔥',
             'priority_boost': 3
         },
@@ -71,7 +71,6 @@ class TicketManager:
         
         full_text = f"{source} {computer} {message}"
         
-        # Vérifier chaque catégorie
         for category, info in self.DEVICE_CATEGORIES.items():
             if category == 'Autres':
                 continue
@@ -101,9 +100,10 @@ class TicketManager:
             print(f"Erreur sauvegarde index: {e}")
     
     def get_ticket_key(self, event):
-        """Génère une clé unique"""
+        """Génère une clé unique basée sur source + event_id + date"""
         category = self.detect_category(event)
-        return f"{category}_{event['source']}_{event['event_id']}_{date.today().isoformat()}"
+        source = re.sub(r'[^\w\-_]', '_', event['source'])
+        return f"{category}_{source}_{event['event_id']}_{date.today().isoformat()}"
     
     def get_priority_emoji(self, priority):
         if priority >= 9:
@@ -141,6 +141,7 @@ class TicketManager:
             return f"⚪ MINIMAL 1/10"
     
     def find_existing_ticket(self, event):
+        """Cherche un ticket existant pour cet événement"""
         ticket_key = self.get_ticket_key(event)
         
         if ticket_key in self.ticket_index:
@@ -151,6 +152,7 @@ class TicketManager:
         return None
     
     def create_or_update_ticket(self, event, analysis, web_links, log_callback=None):
+        """Crée ou met à jour un ticket"""
         existing_ticket = self.find_existing_ticket(event)
         
         if existing_ticket:
@@ -159,35 +161,31 @@ class TicketManager:
             return self.create_new_ticket(event, analysis, web_links, log_callback)
     
     def create_new_ticket(self, event, analysis, web_links, log_callback=None):
+        """Crée un nouveau ticket - STRUCTURE CORRECTE"""
         try:
             # Détection de catégorie
             category = self.detect_category(event)
             category_info = self.DEVICE_CATEGORIES[category]
             
-            # Dossier de catégorie
+            # STRUCTURE: Catégorie > Event_ID > Tickets
             category_dir = os.path.join(self.output_dir, category)
-            os.makedirs(category_dir, exist_ok=True)
+            event_id_dir = os.path.join(category_dir, f"Event_{event['event_id']}")
+            os.makedirs(event_id_dir, exist_ok=True)
             
-            # Sous-dossier pour le type d'erreur
-            safe_source = re.sub(r'[^\w\-_]', '_', event['source'])
-            ticket_dir = os.path.join(
-                category_dir,
-                f"{safe_source}_EventID_{event['event_id']}"
-            )
-            os.makedirs(ticket_dir, exist_ok=True)
-            
-            # Nom du fichier
+            # Nom du fichier avec date et source
             today = date.today().isoformat()
+            safe_source = re.sub(r'[^\w\-_]', '_', event['source'])[:30]
+            
             ticket_file = os.path.join(
-                ticket_dir, 
-                f"ticket_{today}.txt"
+                event_id_dir,
+                f"ticket_{today}_{safe_source}.txt"
             )
             
             # Informations
             grouped_count = event.get('_grouped_count', 1)
             affected_computers = event.get('_affected_computers', [event['computer']])
             priority = event.get('_priority', 5) + category_info['priority_boost']
-            priority = min(priority, 10)  # Max 10
+            priority = min(priority, 10)
             
             priority_label = self.get_priority_label(priority)
             priority_emoji = self.get_priority_emoji(priority)
@@ -220,7 +218,7 @@ class TicketManager:
 
 📅 CRÉÉ LE: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 📊 OCCURRENCES: {grouped_count}
-🔍 MACHINES AFFECTÉES: {len(affected_computers)}
+🔢 MACHINES AFFECTÉES: {len(affected_computers)}
 ⚠️ TYPE: {event['event_type']}
 🎯 PRIORITÉ: {priority_label}
 📌 STATUT: {status}
@@ -301,9 +299,9 @@ class TicketManager:
             
             if log_callback:
                 if grouped_count > 1:
-                    log_callback(f"  ✅ Ticket groupé créé dans {category}: {grouped_count} événements, {len(affected_computers)} PC(s)")
+                    log_callback(f"  ✅ Ticket groupé créé: {category}/Event_{event['event_id']}")
                 else:
-                    log_callback(f"  ✅ Nouveau ticket dans {category}: {os.path.basename(ticket_file)}")
+                    log_callback(f"  ✅ Nouveau ticket: {category}/Event_{event['event_id']}/{os.path.basename(ticket_file)}")
             
             return ticket_file
             
@@ -330,7 +328,7 @@ class TicketManager:
             )
             
             # Ajouter PC si nécessaire
-            computers_section = re.search(r'💻 ORDINATEURS AFFECTÉS:\n(.*?)\n─', content, re.DOTALL)
+            computers_section = re.search(r'💻 ORDINATEURS AFFECTÉS:\n(.*?)\n───', content, re.DOTALL)
             if computers_section and event['computer'] not in computers_section.group(1):
                 machines_count = len(re.findall(r'\[\d+\]', computers_section.group(1)))
                 new_machines_count = machines_count + 1
@@ -338,12 +336,12 @@ class TicketManager:
                 new_computer_line = f"  [{new_machines_count}] {event['computer']}\n"
                 content = content.replace(
                     computers_section.group(0),
-                    computers_section.group(0).replace('\n─', f"{new_computer_line}\n─")
+                    computers_section.group(0).replace('\n───', f"{new_computer_line}\n───")
                 )
                 
                 content = re.sub(
-                    r'🔍 MACHINES AFFECTÉES: \d+',
-                    f'🔍 MACHINES AFFECTÉES: {new_machines_count}',
+                    r'🔢 MACHINES AFFECTÉES: \d+',
+                    f'🔢 MACHINES AFFECTÉES: {new_machines_count}',
                     content
                 )
             
@@ -387,7 +385,7 @@ class TicketManager:
                 f.write(content)
             
             if log_callback:
-                log_callback(f"  🔄 Ticket mis à jour: {new_count} occurrence(s) totales")
+                log_callback(f"  🔄 Ticket mis à jour: {new_count} occurrence(s)")
             
             return ticket_path
             
@@ -408,25 +406,32 @@ class TicketManager:
                 if not os.path.exists(category_path):
                     continue
                 
-                for folder in os.listdir(category_path):
-                    folder_path = os.path.join(category_path, folder)
-                    if not os.path.isdir(folder_path):
+                # Parcourir chaque Event_ID
+                for event_folder in os.listdir(category_path):
+                    event_path = os.path.join(category_path, event_folder)
+                    
+                    if not os.path.isdir(event_path):
                         continue
                     
-                    for ticket_file in os.listdir(folder_path):
+                    # Parcourir les tickets
+                    for ticket_file in os.listdir(event_path):
                         if not ticket_file.startswith('ticket_'):
                             continue
                         
-                        ticket_path = os.path.join(folder_path, ticket_file)
+                        ticket_path = os.path.join(event_path, ticket_file)
+                        
+                        if not os.path.isfile(ticket_path):
+                            continue
+                        
                         file_date = datetime.fromtimestamp(os.path.getmtime(ticket_path))
                         
                         if file_date < cutoff_date:
                             os.remove(ticket_path)
                             cleaned += 1
                     
-                    # Supprimer dossier vide
-                    if not os.listdir(folder_path):
-                        os.rmdir(folder_path)
+                    # Supprimer dossier Event_ID vide
+                    if not os.listdir(event_path):
+                        os.rmdir(event_path)
             
             # Nettoyer index
             self.ticket_index = {

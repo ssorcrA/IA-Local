@@ -1,6 +1,7 @@
 """
-Lecteur d'événements Windows avec cercles colorés
-Fichier : event_reader.py
+Lecteur d'événements Windows - VERSION CORRIGÉE
+Fichier : event_reader.py - REMPLACER L'ANCIEN
+CORRECTIF : Détection en temps réel des nouvelles erreurs
 """
 from datetime import datetime, timedelta
 import os
@@ -19,9 +20,8 @@ except ImportError:
 
 
 class EventReader:
-    """Lit les événements depuis le fichier EVTX"""
+    """Lit les événements depuis le fichier EVTX - VERSION CORRIGÉE"""
     
-    # Priorités des Event IDs (1-10)
     EVENT_PRIORITIES = {
         # Niveau 10 - CRITIQUE
         1102: 10, 4719: 10, 4794: 10,
@@ -37,8 +37,9 @@ class EventReader:
         1000: 5, 1002: 5,
     }
     
-    def __init__(self, log_callback=None):
+    def __init__(self, log_callback=None, verbose=False):
         self.log_callback = log_callback
+        self.verbose = verbose
         self.last_record_number = 0
         self.last_check_time = None
         self.log_file = LOG_FILE
@@ -53,11 +54,13 @@ class EventReader:
         else:
             print(message)
     
+    def debug(self, message):
+        if self.verbose:
+            self.log(f"   [DEBUG] {message}")
+    
     def get_priority_emoji(self, event_id, event_type):
-        """Retourne le cercle coloré selon la priorité"""
         priority = self.EVENT_PRIORITIES.get(event_id, 5)
         
-        # Ajuster selon le type
         if event_type == 'ERROR' and priority < 6:
             priority = 6
         
@@ -73,7 +76,6 @@ class EventReader:
             return "⚪"
     
     def create_temp_copy(self):
-        """Crée une copie temporaire du fichier EVTX"""
         try:
             temp_dir = os.path.join(os.path.dirname(self.log_file), "temp")
             os.makedirs(temp_dir, exist_ok=True)
@@ -86,11 +88,10 @@ class EventReader:
             
             return temp_file
         except Exception as e:
-            self.log(f"⚠️ Impossible de créer la copie: {e}")
+            self.log(f"⚠️  Impossible de créer la copie: {e}")
             return None
     
     def check_availability(self):
-        """Vérifie que le fichier EVTX est accessible"""
         if not WINDOWS_EVENTS_AVAILABLE:
             raise Exception("pywin32 non installé: pip install pywin32")
         
@@ -108,7 +109,7 @@ class EventReader:
             self.log(f"✓ Accès direct au fichier OK")
             return True
         except Exception as e:
-            self.log(f"⚠️ Accès direct impossible: {str(e)}")
+            self.log(f"⚠️  Accès direct impossible: {str(e)}")
             self.log(f"🔄 Tentative avec copie temporaire...")
             
             self.temp_log_file = self.create_temp_copy()
@@ -126,13 +127,23 @@ class EventReader:
                 raise Exception("Impossible d'accéder au fichier EVTX")
     
     def get_working_file(self):
-        """Retourne le fichier à utiliser"""
         return self.temp_log_file if self.temp_log_file else os.path.abspath(self.log_file)
     
     def read_events(self, since_time=None, since_record=None):
-        """Lit les événements ERROR et WARNING depuis le fichier EVTX"""
+        """Lit les événements ERROR et WARNING - VERSION CORRIGÉE"""
         if not WINDOWS_EVENTS_AVAILABLE:
             raise Exception("pywin32 requis")
+        
+        # CORRECTIF: Toujours recréer une copie temporaire fraîche
+        # pour capturer les derniers événements
+        if since_record is not None and since_record > 0:
+            self.debug(f"Surveillance continue: création copie fraîche...")
+            if self.temp_log_file and os.path.exists(self.temp_log_file):
+                try:
+                    os.remove(self.temp_log_file)
+                except:
+                    pass
+            self.temp_log_file = self.create_temp_copy()
         
         working_file = self.get_working_file()
         
@@ -149,7 +160,7 @@ class EventReader:
                 hand = win32evtlog.OpenBackupEventLog(None, working_file)
             except Exception as open_error:
                 if not self.temp_log_file:
-                    self.log(f"⚠️ Erreur d'ouverture, création copie temporaire...")
+                    self.log(f"⚠️  Erreur d'ouverture, création copie temporaire...")
                     self.temp_log_file = self.create_temp_copy()
                     if self.temp_log_file:
                         working_file = self.temp_log_file
@@ -162,17 +173,22 @@ class EventReader:
             flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
             
             if since_record:
-                self.log(f"📖 Recherche événements après record #{since_record}...")
+                self.log(f"🔖 Recherche événements APRÈS record #{since_record}...")
+                self.debug(f"Mode surveillance: recherche incrémentale")
             elif since_time:
-                self.log(f"📖 Recherche événements depuis {since_time.strftime('%Y-%m-%d %H:%M:%S')}...")
+                self.log(f"🔖 Recherche événements depuis {since_time.strftime('%Y-%m-%d %H:%M:%S')}...")
             else:
-                self.log(f"📖 Lecture complète du fichier...")
+                self.log(f"🔖 Lecture complète du fichier...")
             
             total_read = 0
             events_found = 0
             errors_found = 0
             warnings_found = 0
             max_events = 50000
+            
+            # CORRECTIF: En mode surveillance, on cherche TOUS les événements
+            # supérieurs au dernier record connu
+            new_events_buffer = []
             
             while total_read < max_events:
                 try:
@@ -184,7 +200,9 @@ class EventReader:
                     for event in event_records:
                         total_read += 1
                         
+                        # CORRECTIF: Si on cherche depuis un record, on GARDE tous ceux APRÈS
                         if since_record and event.RecordNumber <= since_record:
+                            # On arrête dès qu'on atteint le dernier record connu
                             total_read = max_events
                             break
                         
@@ -225,24 +243,24 @@ class EventReader:
                         except:
                             event_data['message'] = f"Event ID {event_data['event_id']} from {event_data['source']}"
                         
-                        # Ajouter la priorité
                         event_data['_priority'] = self.EVENT_PRIORITIES.get(event_data['event_id'], 5)
                         
                         events.append(event_data)
                         events_found += 1
                         
+                        # CORRECTIF: Mettre à jour le dernier record à chaque événement
                         if event.RecordNumber > self.last_record_number:
                             self.last_record_number = event.RecordNumber
                         
                         if total_read % 1000 == 0:
-                            self.log(f"   ... {total_read} événements scannés, {events_found} erreurs/warnings trouvées")
+                            self.debug(f"{total_read} événements scannés, {events_found} trouvés")
                 
                 except Exception as read_error:
                     error_str = str(read_error)
                     if "No more data" in error_str or "handle is invalid" in error_str:
                         break
                     else:
-                        self.log(f"⚠️ Erreur lecture: {read_error}")
+                        self.log(f"⚠️  Erreur lecture: {read_error}")
                         break
             
             events.sort(key=lambda x: x['record_number'])
@@ -253,7 +271,14 @@ class EventReader:
             self.log(f"   • Warnings trouvés: {warnings_found}")
             self.log(f"   • TOTAL INCIDENTS: {events_found}")
             
-            # Afficher les sources AVEC CERCLES COLORÉS
+            # CORRECTIF: Afficher les nouveaux événements détectés
+            if since_record and events:
+                self.log(f"\n🆕 NOUVEAUX ÉVÉNEMENTS DEPUIS RECORD #{since_record}:")
+                for i, event in enumerate(events[:5], 1):
+                    emoji = self.get_priority_emoji(event['event_id'], event['event_type'])
+                    self.log(f"   {emoji} [{i}] #{event['record_number']} - {event['source']} (Event {event['event_id']})")
+            
+            # Afficher les sources AVEC CERCLES
             if events:
                 sources = {}
                 for event in events:
@@ -262,7 +287,6 @@ class EventReader:
                 
                 self.log(f"\n📋 Sources d'erreurs trouvées:")
                 for source, count in sorted(sources.items(), key=lambda x: x[1], reverse=True)[:10]:
-                    # Trouver la priorité max pour cette source
                     max_priority = max(e['_priority'] for e in events if e['source'] == source)
                     emoji = self.get_priority_emoji(max_priority, 'ERROR')
                     self.log(f"   {emoji} {source}: {count} incident(s)")
@@ -284,7 +308,6 @@ class EventReader:
                     pass
     
     def read_initial_check(self, hours=24):
-        """Vérification initiale: lit les X dernières heures"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
         self.log(f"🔍 Vérification des {hours} dernières heures...")
         self.log(f"   Recherche depuis: {cutoff_time.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -292,8 +315,15 @@ class EventReader:
         return self.read_events(since_time=cutoff_time)
     
     def read_new_events(self):
-        """Surveillance continue: lit uniquement les nouveaux événements"""
+        """Surveillance continue - VERSION CORRIGÉE"""
         self.log(f"🔄 Recherche événements après record #{self.last_record_number}")
+        
+        # CORRECTIF: Si aucun événement n'a été lu, faire une lecture initiale courte
+        if self.last_record_number == 0:
+            self.log("   Premier scan - lecture des 2 dernières heures")
+            cutoff = datetime.now() - timedelta(hours=2)
+            return self.read_events(since_time=cutoff)
+        
         return self.read_events(since_record=self.last_record_number)
     
     def get_last_record_number(self):
@@ -304,7 +334,6 @@ class EventReader:
         self.log(f"📌 Dernier record défini: #{record_number}")
     
     def cleanup_temp_files(self):
-        """Nettoie les fichiers temporaires"""
         if self.temp_log_file and os.path.exists(self.temp_log_file):
             try:
                 os.remove(self.temp_log_file)

@@ -1,0 +1,79 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🖥️ SERVEUR AD - 🟠 🟠 HAUTE 7/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-12 14:19:41
+📊 OCCURRENCES: 4
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟠 HAUTE 7/10
+📌 STATUT: 🟠 HAUTE - ACTION RAPIDE RECOMMANDÉE
+🏷️ CATÉGORIE: 🖥️ Serveur AD
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-SystemDataArchiver
+  • Event ID: 2051
+  • Première détection: Mon Jan 12 14:17:00 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS failed with error 1 for volume path '\\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\', skipping query of its disks.".>...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Mon Jan 12 14:17:00 2026 - Record #7745
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+
+[2] Mon Jan 12 14:32:00 2026 - Record #7789
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+[3] Mon Jan 12 14:47:00 2026 - Record #7822
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+[4] Mon Jan 12 15:02:00 2026 - Record #7868
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+🔍 DIAGNOSTIC:
+Erreur détectée - Event ID 2051 depuis Microsoft-Windows-SystemDataArchiver
+Aucun service d'analyse IA n'est actuellement disponible.
+
+⚡ ACTIONS IMMÉDIATES RECOMMANDÉES:
+1. Consulter l'Observateur d'événements Windows
+2. Rechercher "Event ID 2051 Microsoft-Windows-SystemDataArchiver" sur Google
+3. Vérifier les logs complets
+
+🔒 RECOMMANDATIONS:
+Démarrez Ollama pour obtenir des analyses IA détaillées.
+
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 🔍 ANALYSER rapidement la situation
+  2. 🛠️ APPLIQUER les solutions proposées
+  3. 📊 SURVEILLER l'évolution
+  4. 📝 DOCUMENTER les actions prises
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: OUI - URGENT
+⏰ DERNIÈRE MISE À JOUR: 2026-01-12 15:08:51
+📈 TENDANCE: STABLE (4 occurrences)
+
+═══════════════════════════════════════════════════════════

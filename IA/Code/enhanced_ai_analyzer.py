@@ -1,10 +1,15 @@
 """
-Analyseur IA amélioré SANS TIMEOUT pour IA locale
-Fichier : enhanced_ai_analyzer.py - VERSION SANS TIMEOUT
+Analyseur IA avec ARRÊT IMMÉDIAT garanti
+Fichier : enhanced_ai_analyzer.py - VERSION CORRIGÉE
+CORRECTIFS:
+- Arrêt immédiat des requêtes HTTP
+- Fermeture de session garantie
+- Timeout raisonnable pour API externes
 """
 import requests
 import json
 import webbrowser
+import threading
 from config import (
     get_ollama_url, get_ollama_web_url,
     OLLAMA_MODEL, MAX_TOKENS,
@@ -13,7 +18,7 @@ from config import (
 
 
 class EnhancedAIAnalyzer:
-    """Analyseur IA avec priorité sur Ollama local + SANS TIMEOUT"""
+    """Analyseur IA avec arrêt immédiat garanti"""
     
     def __init__(self, log_callback=None):
         self.log_callback = log_callback
@@ -22,7 +27,8 @@ class EnhancedAIAnalyzer:
         self.ollama_available = False
         self.available_models = []
         self.stop_requested = False
-        self.current_session = None  # Pour pouvoir annuler les requêtes
+        self.current_session = None
+        self.current_thread = None
     
     def log(self, message):
         """Log un message"""
@@ -35,17 +41,20 @@ class EnhancedAIAnalyzer:
             print(message)
     
     def request_stop(self):
-        """Demande l'arrêt de l'analyse"""
+        """Demande l'arrêt IMMÉDIAT de l'analyse"""
         self.stop_requested = True
         self.log("🛑 Arrêt demandé pour l'analyseur IA")
         
-        # Fermer la session en cours pour interrompre les requêtes
+        # Fermer la session HTTP en cours
         if self.current_session:
             try:
                 self.current_session.close()
                 self.log("  ✓ Session HTTP fermée")
             except:
                 pass
+        
+        # Marquer la session comme None
+        self.current_session = None
     
     def reset_stop(self):
         """Réinitialise le flag d'arrêt"""
@@ -53,7 +62,7 @@ class EnhancedAIAnalyzer:
         self.current_session = None
     
     def check_ollama_endpoints(self):
-        """Vérifie la disponibilité d'Ollama et liste les modèles"""
+        """Vérifie la disponibilité d'Ollama"""
         self.log("\n🔍 VÉRIFICATION OLLAMA")
         self.log("=" * 80)
         
@@ -80,7 +89,7 @@ class EnhancedAIAnalyzer:
                 if OLLAMA_MODEL in self.available_models:
                     self.log(f"  ✓ Modèle configuré '{OLLAMA_MODEL}' trouvé")
                 else:
-                    self.log(f"  ⚠️ Modèle '{OLLAMA_MODEL}' non trouvé, utilisation du premier disponible")
+                    self.log(f"  ⚠️ Modèle '{OLLAMA_MODEL}' non trouvé")
             else:
                 self.log(f"  ❌ API répond avec code {response.status_code}")
                 self.ollama_available = False
@@ -92,25 +101,9 @@ class EnhancedAIAnalyzer:
             self.log(f"  ❌ Erreur: {str(e)}")
             self.ollama_available = False
         
-        # Vérifier interface web
-        try:
-            self.log(f"\n  🌐 Test interface web: {self.ollama_web_url}")
-            response = requests.get(self.ollama_web_url, timeout=3)
-            
-            if response.status_code == 200:
-                self.log(f"  ✅ Interface web accessible")
-                self.log(f"  💡 Ouvrir dans le navigateur: {self.ollama_web_url}")
-            else:
-                self.log(f"  ⚠️ Interface web répond avec code {response.status_code}")
-        
-        except:
-            self.log(f"  ⚠️ Interface web non accessible")
-        
-        # Résumé
         self.log("=" * 80)
         if self.ollama_available:
-            self.log("✅ Ollama opérationnel - Analyses locales activées")
-            self.log("⏱️  SANS TIMEOUT - L'IA peut prendre tout le temps nécessaire\n")
+            self.log("✅ Ollama opérationnel - Analyses locales activées\n")
         else:
             self.log("⚠️ Ollama indisponible - Utilisation des API externes\n")
     
@@ -122,33 +115,19 @@ class EnhancedAIAnalyzer:
             return self.available_models[0]
         return OLLAMA_MODEL
     
-    def open_ollama_web(self):
-        """Ouvre l'interface web Ollama dans le navigateur"""
-        try:
-            webbrowser.open(self.ollama_web_url)
-            self.log(f"🌐 Interface Ollama ouverte: {self.ollama_web_url}")
-            return True
-        except Exception as e:
-            self.log(f"❌ Impossible d'ouvrir l'interface: {e}")
-            return False
-    
     def analyze_with_ollama(self, prompt):
-        """Analyse avec Ollama local - SANS TIMEOUT"""
-        if not self.ollama_available:
-            return None
-        
-        if self.stop_requested:
-            self.log("  🛑 Analyse annulée (arrêt demandé)")
+        """Analyse avec Ollama local - avec timeout"""
+        if not self.ollama_available or self.stop_requested:
             return None
         
         try:
             model = self.get_working_model()
             self.log(f"  🤖 Analyse avec Ollama ({model})...")
-            self.log(f"  ⏱️  SANS TIMEOUT - Attente de la réponse...")
             
-            # Créer une session pour pouvoir l'annuler
+            # Créer une nouvelle session
             self.current_session = requests.Session()
             
+            # Timeout de 60 secondes pour Ollama
             response = self.current_session.post(
                 f'{self.ollama_api_url}/api/generate',
                 json={
@@ -160,18 +139,18 @@ class EnhancedAIAnalyzer:
                         'num_predict': MAX_TOKENS
                     }
                 },
-                timeout=None  # AUCUN TIMEOUT
+                timeout=60  # Timeout raisonnable
             )
             
+            # Vérifier si arrêt demandé
             if self.stop_requested:
-                self.log("  🛑 Analyse annulée après réception")
+                self.log("  🛑 Analyse annulée")
                 return None
             
             if response.status_code == 200:
                 result = response.json().get('response', '')
                 if result:
                     self.log("  ✅ Analyse Ollama réussie")
-                    self.log(f"  📝 Réponse reçue: {len(result)} caractères")
                     return result
                 else:
                     self.log("  ⚠️ Réponse Ollama vide")
@@ -180,9 +159,12 @@ class EnhancedAIAnalyzer:
                 self.log(f"  ⚠️ Ollama erreur HTTP {response.status_code}")
                 return None
         
+        except requests.exceptions.Timeout:
+            self.log(f"  ⏱️ Ollama timeout après 60s")
+            return None
         except requests.exceptions.ConnectionError:
             if self.stop_requested:
-                self.log(f"  🛑 Connexion interrompue (arrêt demandé)")
+                self.log(f"  🛑 Connexion interrompue")
             else:
                 self.log(f"  ⚠️ Ollama connexion perdue")
                 self.ollama_available = False
@@ -197,7 +179,7 @@ class EnhancedAIAnalyzer:
             self.current_session = None
     
     def analyze_with_claude(self, prompt):
-        """Analyse avec Claude API (fallback)"""
+        """Analyse avec Claude API"""
         if not ANTHROPIC_API_KEY or self.stop_requested:
             return None
         
@@ -235,7 +217,7 @@ class EnhancedAIAnalyzer:
         return None
     
     def analyze_with_openai(self, prompt):
-        """Analyse avec OpenAI API (fallback)"""
+        """Analyse avec OpenAI API"""
         if not OPENAI_API_KEY or self.stop_requested:
             return None
         
@@ -272,7 +254,7 @@ class EnhancedAIAnalyzer:
         return None
     
     def analyze_with_groq(self, prompt):
-        """Analyse avec Groq API (fallback)"""
+        """Analyse avec Groq API"""
         if not GROQ_API_KEY or self.stop_requested:
             return None
         
@@ -309,16 +291,15 @@ class EnhancedAIAnalyzer:
         return None
     
     def build_prompt(self, event, web_results=None):
-        """Construit le prompt d'analyse optimisé"""
-        # Déterminer le type d'appareil
+        """Construit le prompt d'analyse"""
         device_type = "Windows Server"
         if event.get('_is_syslog'):
             device_type = f"{event.get('_device_name', 'Équipement réseau')} ({event.get('_device_type', 'network')})"
         
-        prompt = f"""Tu es un expert en sécurité informatique et administration système. Analyse cette erreur et fournis une solution concrète et actionnable.
+        prompt = f"""Tu es un expert en sécurité informatique. Analyse cette erreur et fournis une solution concrète.
 
 CONTEXTE DE L'INCIDENT:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┌─────────────────────────────────────────────────────────┐
 Type d'appareil: {device_type}
 Source: {event['source']}
 Event ID: {event['event_id']}
@@ -329,57 +310,39 @@ Priorité: {event.get('_priority', 5)}/10
 
 MESSAGE D'ERREUR:
 {event['message'][:800]}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+└─────────────────────────────────────────────────────────┘
 """
 
         if web_results:
             prompt += f"""
 INFORMATIONS TROUVÉES SUR LE WEB:
 {web_results[:1500]}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
         prompt += """
-FOURNIS UNE ANALYSE STRUCTURÉE ET DÉTAILLÉE:
+FOURNIS UNE ANALYSE STRUCTURÉE:
 
 🔍 1. DIAGNOSTIC
-   • Explication claire du problème en 2-3 phrases
-   • Impact sur le système/réseau
-   • Niveau de gravité réel
+   • Explication claire du problème
+   • Impact sur le système
 
-🎯 2. CAUSES PROBABLES
-   • Liste de 2-3 causes possibles avec leurs probabilités
-   • Contexte technique de chaque cause
-
-⚡ 3. SOLUTION IMMÉDIATE (< 5 minutes)
-   • Actions à faire MAINTENANT pour contenir le problème
-   • Étapes numérotées et précises
+⚡ 2. SOLUTION IMMÉDIATE
+   • Actions à faire MAINTENANT
    • Commandes exactes si applicable
 
-🛠️ 4. RÉSOLUTION COMPLÈTE (solution durable)
+🛠️ 3. RÉSOLUTION COMPLÈTE
    • Procédure détaillée pas à pas
-   • Commandes PowerShell/CMD si nécessaire
    • Configuration à modifier
-   • Vérifications à effectuer
 
-🔒 5. PRÉVENTION
+🔒 4. PRÉVENTION
    • Mesures pour éviter la récurrence
-   • Bonnes pratiques à mettre en place
-   • Monitoring recommandé
 
-IMPORTANT: 
-- Sois TRÈS précis et technique
-- Fournis des commandes EXACTES et testées
-- Adapte-toi au type d'appareil (serveur Windows ou équipement réseau)
-- Priorise la SÉCURITÉ et la STABILITÉ
-- Réponds en FRANÇAIS
-
-Commence ton analyse maintenant:"""
+Réponds en FRANÇAIS et sois PRÉCIS."""
 
         return prompt
     
     def analyze(self, event, web_results=None):
-        """Analyse l'erreur avec cascade de providers (Ollama prioritaire)"""
+        """Analyse l'erreur avec cascade de providers"""
         # Réinitialiser le flag d'arrêt
         self.reset_stop()
         
@@ -389,7 +352,7 @@ Commence ton analyse maintenant:"""
         self.log(f"   Source: {event['source']}")
         self.log(f"   Event ID: {event['event_id']}")
         
-        # PRIORITÉ 1: Ollama local (plus rapide et privé)
+        # PRIORITÉ 1: Ollama local
         if self.ollama_available and not self.stop_requested:
             result = self.analyze_with_ollama(prompt)
             if result:
@@ -420,61 +383,16 @@ Commence ton analyse maintenant:"""
         return self.fallback_analysis(event)
     
     def fallback_analysis(self, event):
-        """Analyse de secours si aucune IA n'est disponible"""
+        """Analyse de secours"""
         return f"""🔍 DIAGNOSTIC:
 Erreur détectée - Event ID {event['event_id']} depuis {event['source']}
 Aucun service d'analyse IA n'est actuellement disponible.
 
-🎯 ANALYSE AUTOMATIQUE:
-Cette erreur nécessite une investigation manuelle. Voici quelques pistes:
-
 ⚡ ACTIONS IMMÉDIATES RECOMMANDÉES:
-1. Consulter l'Observateur d'événements Windows pour plus de détails
+1. Consulter l'Observateur d'événements Windows
 2. Rechercher "Event ID {event['event_id']} {event['source']}" sur Google
-3. Vérifier les logs complets de l'application concernée
-4. Consulter la documentation Microsoft ou du fabricant
-
-🛠️ RESSOURCES UTILES:
-• Event ID Database: https://www.eventid.net/search.asp?evtid={event['event_id']}
-• Microsoft Docs: https://docs.microsoft.com/windows/
-• TechNet Forums: https://social.technet.microsoft.com/
+3. Vérifier les logs complets
 
 🔒 RECOMMANDATIONS:
-1. Démarrez Ollama pour obtenir des analyses IA détaillées:
-   - API: {self.ollama_api_url}
-   - Interface: {self.ollama_web_url}
-   
-2. Ou configurez une clé API externe:
-   - Anthropic Claude (ANTHROPIC_API_KEY)
-   - OpenAI GPT (OPENAI_API_KEY)
-   - Groq (GROQ_API_KEY)
-
-💡 CONSEIL:
-Pour des analyses précises et rapides, assurez-vous qu'Ollama est démarré
-avec le modèle '{OLLAMA_MODEL}' installé.
+Démarrez Ollama pour obtenir des analyses IA détaillées.
 """
-    
-    def test_analysis(self):
-        """Test rapide de l'analyseur"""
-        self.log("\n🧪 TEST DE L'ANALYSEUR IA")
-        self.log("=" * 80)
-        
-        test_event = {
-            'source': 'Test',
-            'event_id': 4625,
-            'event_type': 'ERROR',
-            'computer': 'TEST-PC',
-            'time_generated': '2025-01-07 10:00:00',
-            'message': 'Test de connexion échouée',
-            '_priority': 8
-        }
-        
-        result = self.analyze(test_event)
-        
-        if result and len(result) > 100:
-            self.log("✅ Test réussi - Analyseur opérationnel")
-            self.log(f"   Longueur de la réponse: {len(result)} caractères")
-            return True
-        else:
-            self.log("❌ Test échoué - Vérifiez la configuration IA")
-            return False

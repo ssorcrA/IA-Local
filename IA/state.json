@@ -1,0 +1,9 @@
+{
+  "last_ticket_check": "2026-01-12T09:45:21.736221",
+  "last_syslog_position": 0,
+  "last_syslog_hash": 0,
+  "last_syslog_timestamp": null,
+  "last_forwarded_record": 0,
+  "processed_events": [],
+  "last_save": "2026-01-12T09:45:21.736254"
+}

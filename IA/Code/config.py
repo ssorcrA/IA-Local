@@ -45,17 +45,21 @@ SMTP_FROM = ""
 SMTP_TO = ["admin@example.com"]
 
 MONITORED_DEVICES = {
-    '192.168.1.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
-    '192.168.1.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
-    '192.168.1.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
+    '192.168.10.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
+    '192.168.10.10': {'name': 'Active Directory', 'type': 'Server', 'icon': '🖥️', 'priority_boost': 2},
+    '192.168.10.110': {'name': 'Serveur-IA','type': 'Server', 'icon': '🤖', 'priority_boost': 1},
+    '192.168.10.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
+    '192.168.10.16': {'name': 'Switch Secondaire', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
+    '192.168.10.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
 }
 
 DEVICE_CATEGORIES = {
-    'Serveur AD': {'keywords': ['DC', 'Active Directory', 'LDAP', 'DNS', 'Kerberos', 'NTDS', 'DFS'], 'icon': '🖥️', 'priority_boost': 2},
-    'Serveur IA': {'keywords': ['IA', 'Ollama', 'AI', 'Machine Learning', 'GPU'], 'icon': '🤖', 'priority_boost': 1},
-    'Stormshield': {'keywords': ['192.168.1.254', 'Stormshield', 'firewall', 'utm'], 'icon': '🔥', 'priority_boost': 3},
-    'Switch': {'keywords': ['192.168.1.15', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 1},
-    'Borne WiFi': {'keywords': ['192.168.1.11', 'WiFi', 'wireless', 'SSID', 'AP'], 'icon': '📡', 'priority_boost': 1},
+    'Serveur AD': {'keywords': ['192.168.10.10','DC', 'Active Directory', 'LDAP', 'DNS', 'Kerberos', 'NTDS', 'DFS'], 'icon': '🖥️', 'priority_boost': 2},
+    'Serveur IA': {'keywords': ['192.168.10.110','IA', 'Ollama', 'AI', 'Machine Learning', 'GPU'], 'icon': '🤖', 'priority_boost': 1},
+    'Stormshield': {'keywords': ['192.168.10.254', 'Stormshield', 'firewall', 'utm'], 'icon': '🔥', 'priority_boost': 3},
+    'Switch': {'keywords': ['192.168.10.15', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 1},
+    'Switch': {'keywords': ['192.168.10.16', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 1},
+    'Borne WiFi': {'keywords': ['192.168.10.11', 'WiFi', 'wireless', 'SSID', 'AP'], 'icon': '📡', 'priority_boost': 1},
     'Serveurs': {'keywords': ['Server', 'SRV-', 'Windows Server'], 'icon': '💻', 'priority_boost': 1},
     'Autres': {'keywords': [], 'icon': '❓', 'priority_boost': 0}
 }

@@ -1,0 +1,71 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🔥 STORMSHIELD - 🟡 🟡 MOYENNE 6/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-12 14:21:45
+📊 OCCURRENCES: 8
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: ERROR
+🎯 PRIORITÉ: 🟡 MOYENNE 6/10
+📌 STATUT: 🟡 MOYENNE - SURVEILLANCE NÉCESSAIRE
+🏷️ CATÉGORIE: 🔥 Stormshield
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: 🔥 Stormshield (192.168.10.254)
+  • Event ID: 6000
+  • Première détection: 2026-01-12 15:14:42
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] 192.168.10.254
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+[user.warning] 192.168.10.254	Jan 12 15:14:42	1	user	warning		2026-01-12T15:14:44+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:14:44" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-12 15:14:43" pri=4 confid=00 srcif="Ethernet0" srcifname="out" ipproto=udp proto=netbios-ns_udp src=192.168.250.17 srcport=137 srcportname=netbios-ns_udp srcmac=00:0c:29:e8:09:59 dst=192.168.250.255 dstport=137 d
+🔍 Détection: severity:warning(6) | block(8)...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] 2026-01-12 15:14:42 - Record #405901
+    Computer: 192.168.10.254
+    Message: [user.warning] 192.168.10.254	Jan 12 15:14:42	1	user	warning		2026-01-12T15:14:44+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:14:44" fw="SN310A41KL181A7" tz=+0100 startime="2026-...
+
+
+[8] 2026-01-12 15:39:34 - Record #765057
+    Computer: 192.168.10.254
+    Message: [user.warning] 192.168.10.254	Jan 12 15:39:34	1	user	warning		2026-01-12T15:39:35+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:39:35" fw="SN310A41KL181A7" tz=+0100 startime="2026-...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+🔍 DIAGNOSTIC:
+Erreur détectée - Event ID 6000 depuis 🔥 Stormshield (192.168.10.254)
+Aucun service d'analyse IA n'est actuellement disponible.
+
+⚡ ACTIONS IMMÉDIATES RECOMMANDÉES:
+1. Consulter l'Observateur d'événements Windows
+2. Rechercher "Event ID 6000 🔥 Stormshield (192.168.10.254)" sur Google
+3. Vérifier les logs complets
+
+🔒 RECOMMANDATIONS:
+Démarrez Ollama pour obtenir des analyses IA détaillées.
+
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📋 PLANIFIER une intervention
+  2. 🔍 VÉRIFIER si le problème persiste
+  3. 🛠️ APPLIQUER les correctifs recommandés
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: OUI
+⏰ DERNIÈRE MISE À JOUR: 2026-01-12 14:47:28
+📈 TENDANCE: EN AUGMENTATION (8 occurrences)
+
+═══════════════════════════════════════════════════════════

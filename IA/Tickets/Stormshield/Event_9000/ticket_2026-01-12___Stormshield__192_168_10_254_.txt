@@ -1,0 +1,96 @@
+╔═══════════════════════════════════════════════════════════╗
+║     🔥 STORMSHIELD - 🟠 🟠 HAUTE 8/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-12 14:20:43
+📊 OCCURRENCES: 12
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: ERROR
+🎯 PRIORITÉ: 🟠 HAUTE 8/10
+📌 STATUT: 🟠 HAUTE - ACTION RAPIDE RECOMMANDÉE
+🏷️ CATÉGORIE: 🔥 Stormshield
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: 🔥 Stormshield (192.168.10.254)
+  • Event ID: 9000
+  • Première détection: 2026-01-12 15:14:57
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] 192.168.10.254
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+[user.alert] 192.168.10.254	Jan 12 15:14:57	1	user	alert		2026-01-12T15:14:58+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:14:58" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-12 15:14:58" pri=1 confid=01 slotlevel=2 ruleid=11 rulename="19b2b9bd223_1" srcif="Ethernet1" srcifname="in" ipproto=tcp dstif="Ethernet0" dstifname="out" proto=ssl src=192.168.10.30 srcport=53483 srcportname=ephem
+🔍 Détection: severity:alert(9) | block(8) | alert(9)...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] 2026-01-12 15:14:57 - Record #526197
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:14:57	1	user	alert		2026-01-12T15:14:58+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:14:58" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+
+[6] 2026-01-12 15:20:18 - Record #863728
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:20:18	1	user	alert		2026-01-12T15:20:20+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:20:20" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[7] 2026-01-12 15:37:26 - Record #710276
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:37:26	1	user	alert		2026-01-12T15:37:27+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:37:27" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[8] 2026-01-12 15:50:20 - Record #910488
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:50:20	1	user	alert		2026-01-12T15:50:21+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:50:21" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[9] 2026-01-12 15:52:32 - Record #34262
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:52:32	1	user	alert		2026-01-12T15:52:33+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:52:33" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[10] 2026-01-12 15:56:49 - Record #513880
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 15:56:49	1	user	alert		2026-01-12T15:56:50+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 15:56:50" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[11] 2026-01-12 16:07:33 - Record #272435
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 16:07:33	1	user	alert		2026-01-12T16:07:35+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 16:07:35" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+
+[12] 2026-01-12 16:12:37 - Record #212347
+    Computer: 192.168.10.254
+    Message: [user.alert] 192.168.10.254	Jan 12 16:12:37	1	user	alert		2026-01-12T16:12:39+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-12 16:12:39" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-1...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+🔍 DIAGNOSTIC:
+Erreur détectée - Event ID 9000 depuis 🔥 Stormshield (192.168.10.254)
+Aucun service d'analyse IA n'est actuellement disponible.
+
+⚡ ACTIONS IMMÉDIATES RECOMMANDÉES:
+1. Consulter l'Observateur d'événements Windows
+2. Rechercher "Event ID 9000 🔥 Stormshield (192.168.10.254)" sur Google
+3. Vérifier les logs complets
+
+🔒 RECOMMANDATIONS:
+Démarrez Ollama pour obtenir des analyses IA détaillées.
+
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 🔍 ANALYSER rapidement la situation
+  2. 🛠️ APPLIQUER les solutions proposées
+  3. 📊 SURVEILLER l'évolution
+  4. 📝 DOCUMENTER les actions prises
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: OUI - URGENT
+⏰ DERNIÈRE MISE À JOUR: 2026-01-12 15:18:35
+📈 TENDANCE: EN AUGMENTATION RAPIDE ⚠️ (12 occurrences)
+
+═══════════════════════════════════════════════════════════
