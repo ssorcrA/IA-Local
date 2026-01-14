@@ -1,0 +1,96 @@
+╔═══════════════════════════════════════════════════════════╗
+║     📡 BORNE WIFI - 🟢 🟢 BASSE 4/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-14 12:34:09
+📊 OCCURRENCES: 2
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: ERROR
+🎯 PRIORITÉ: 🟢 BASSE 4/10
+📌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: 📡 Borne WiFi
+
+───────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: 📡 Borne WiFi (192.168.10.11)
+  • Event ID: 6000
+  • Première détection: 2026-01-14 11:30:26
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] 192.168.10.11
+
+───────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+[syslog.warning] <192.168.10.11 48:00:20:CD:BB:B4> awc[5273]: [activate] awc_init_connection: 3158: cert verify: enable, domainame verify: enable...
+
+───────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] 2026-01-14 11:30:26 - Record #48861
+    Computer: 192.168.10.11
+    Message: [syslog.warning] <192.168.10.11 48:00:20:CD:BB:B4> awc[5273]: [activate] awc_init_connection: 3158: cert verify: enable, domainame verify: enable...
+
+
+[2] 2026-01-14 13:28:44 - Record #635734
+    Computer: 192.168.10.11
+    Message: [syslog.warning] 192.168.10.11	Jan 14 13:28:44	2026	local1	warning		192.168.10.11 AP:48:00:20:cd:bb:b4 <192.168.10.11 48:00:20:CD:BB:B4> awc[5273]: [activate] awc_init_connection: 3158: cert verify: e...
+───────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+Analyse de l'erreur :
+
+L'erreur signalée est liée au certificat et au domaine vérifié sur une borne WiFi. L'erreur spécifique mentionne que le certificat a été verifié avec la fonctionnalité "enable" et que le domaine a également été vérifié avec cette même fonctionnalité.
+
+**1. Diagnostic**
+
+L'erreur est liée à une configuration de sécurité sur la borne WiFi. La fonctionnalité "certify enable" permet de vérifier les certificats pour garantir l'intégrité de la communication. Cependant, dans ce cas, cela a entraîné une erreur.
+
+L'impact sur le système est minimisé car il n'y a pas d'indication de vulnérabilité grave. Toutefois, cette erreur peut être un signal d'une configuration non optimisée en matière de sécurité.
+
+**2. Solution immédiate**
+
+Pour résoudre l'erreur immédiatement :
+
+*   Arrêter le service WiFi sur la borne.
+*   Vérifier les paramètres de certification et de domaine vérifiés dans le fichier de configuration (par exemple, `/etc/wpa_supplicant.conf` pour la borne WiFi).
+*   Définir les paramètres de certification et de domaine comme `verify none` ou `verify caonly`, selon la configuration requise.
+
+**3. Résolution complète**
+
+Procédure détaillée pas à pas pour résoudre l'erreur :
+
+1.  Arrêter le service WiFi sur la borne : `sudo systemctl stop wpa_supplicant`
+2.  Vérifier les paramètres de certification et de domaine vérifiés dans le fichier de configuration : `cat /etc/wpa_supplicant.conf` (copier le contenu du fichier dans l'écran)
+3.  Définir les paramètres de certification et de domaine comme `verify none` ou `verify caonly` : `sudo nano /etc/wpa_supplicant.conf`
+    -   Ajouter la ligne suivante avant la section `[wlan0]`: `verify none`
+    -   Sauver et quitter le fichier
+4.  Redémarrer le service WiFi sur la borne : `sudo systemctl start wpa_supplicant`
+
+**4. Prévention**
+
+Pour éviter la récurrence de cette erreur :
+
+*   Vérifier régulièrement les paramètres de sécurité sur la borne WiFi.
+*   Mise à jour des certificats et des paramètres de configuration en conséquence de changements dans l'environnement réseau ou système.
+*   Utiliser des configurations sécurisées pour la borne WiFi, telles que la définition d'un mot de passe fort et un nom d'utilisateur.
+
+L'erreur signalée peut être résolue en suivant les étapes ci-dessus. Il est important de vérifier régulièrement les paramètres de sécurité sur la borne WiFi pour éviter toute nouvelle erreur.
+
+───────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+───────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-14 13:33:41
+📈 TENDANCE: STABLE (2 occurrences)
+
+═══════════════════════════════════════════════════════════

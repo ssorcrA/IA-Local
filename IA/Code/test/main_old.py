@@ -1,10 +1,11 @@
 """
-Application principale - VERSION CORRIGÉE
-Fichier : main.py - PARTIE 1/2
+Application principale avec toutes les corrections
+Fichier : main.py - VERSION FINALE
 CORRECTIFS:
-- Passe ticket_manager aux threads pour stats
-- Affiche vraies statistiques
-- Détection correcte des appareils
+- Arrêt immédiat de l'IA
+- Pas de doublons Syslog
+- Logs cachés en surveillance
+- Sauvegarde état
 """
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
@@ -62,18 +63,16 @@ class UnifiedMonitorGUI:
                 self.analyze_and_create_ticket, self.refresh_tickets,
                 POLLING_INTERVAL
             )
-            # 🔥 NOUVEAU: Passer le ticket_manager
+            # IMPORTANT: Passer la référence à l'analyseur IA
             self.monitor_thread.set_ai_analyzer(self.ai_analyzer)
-            self.monitor_thread.set_ticket_manager(self.ticket_manager)
             
             self.initial_check_thread = InitialCheckThread(
                 self.log_reader, self.event_filter,
                 self.analyze_and_create_ticket, self.refresh_tickets,
                 INITIAL_CHECK_HOURS
             )
-            # 🔥 NOUVEAU: Passer le ticket_manager
+            # IMPORTANT: Passer la référence à l'analyseur IA
             self.initial_check_thread.set_ai_analyzer(self.ai_analyzer)
-            self.initial_check_thread.set_ticket_manager(self.ticket_manager)
             
             self.ticket_ops = TicketOperations(
                 self.ticket_tree_view, OUTPUT_DIR, self.detail_text,
@@ -216,11 +215,6 @@ class UnifiedMonitorGUI:
             cursor='hand2'
         )
         self.theme_btn.pack(side='right')
-        """
-Application principale - VERSION CORRIGÉE
-Fichier : main.py - PARTIE 2/2 (continuation)
-À combiner avec la partie 1
-"""
     
     def log_message(self, message, tag="info"):
         self.console_manager.log(message, tag)
@@ -296,7 +290,7 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         
         self.log_message(f"\n🚀 Surveillance multi-sources démarrée (intervalle: {POLLING_INTERVAL}s)", "success")
         
-        # Passer l'analyseur IA et le ticket_manager au thread
+        # Passer l'analyseur IA au thread
         self.monitor_thread.start(
             self.log_message,
             lambda t: self.status_bar.update_last_check(t),
@@ -309,7 +303,7 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         self.log_message("   → Interruption des analyses IA", "warning")
         
         self.monitoring = False
-        self.monitor_thread.stop()
+        self.monitor_thread.stop()  # Ceci va aussi arrêter l'IA
         
         self.control_panel.set_monitoring_state(False)
         self.status_bar.update_status("⚫ Inactif", '#95a5a6')
@@ -334,7 +328,7 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         self.control_panel.set_check_state(True)
         self.control_panel.start_btn.config(state='disabled')
         
-        # Passer l'analyseur IA et le ticket_manager au thread
+        # Passer l'analyseur IA au thread
         self.initial_check_thread.start(self.log_message, self.ai_analyzer)
     
     def stop_initial_check(self):
@@ -343,7 +337,7 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         self.log_message("   → Interruption des analyses IA", "warning")
         
         self.initial_check_running = False
-        self.initial_check_thread.stop()
+        self.initial_check_thread.stop()  # Ceci va aussi arrêter l'IA
         
         self.control_panel.set_check_state(False)
         self.control_panel.start_btn.config(state='normal')
@@ -351,57 +345,65 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         self.log_message("✅ Vérification arrêtée proprement\n", "success")
     
     def analyze_and_create_ticket(self, event):
-        """
-        🔥 VERSION CORRIGÉE: 
-        - Crée ou met à jour le ticket
-        - Les stats sont gérées automatiquement dans ticket_manager
-        """
-        try:
-            # Vérifier si arrêt demandé AVANT de commencer
-            if not self.monitoring and not self.initial_check_running:
-                self.log_message("  🛑 Analyse annulée (arrêt demandé)", "warning")
-                return False
-            
-            # Vérifier si l'IA a été arrêtée
-            if self.ai_analyzer.stop_requested:
-                self.log_message("  🛑 Analyse IA annulée", "warning")
-                return False
-            
-            web_results = self.web_searcher.search(event)
-            
-            # Re-vérifier avant l'analyse IA
-            if not self.monitoring and not self.initial_check_running:
-                return False
-            
-            analysis = self.ai_analyzer.analyze(event, web_results)
-            
-            # Vérifier après l'analyse IA
-            if not self.monitoring and not self.initial_check_running:
-                return False
-            
-            if self.ai_analyzer.stop_requested:
-                return False
-            
-            web_links = []
-            if web_results:
-                import re
-                for match in re.finditer(r'🔗 (https?://[^\s]+)', web_results):
-                    web_links.append(match.group(1))
-            
-            # 🔥 Le ticket_manager gère automatiquement les stats
-            ticket_path = self.ticket_manager.create_or_update_ticket(
-                event, analysis, web_links, 
-                lambda msg: self.log_message(msg, "success")
-            )
-            
-            if ticket_path:
-                self.log_message(f"  📄 Ticket: {os.path.basename(ticket_path)}", "success")
-            
-            return True
-            
-        except Exception as e:
-            self.log_message(f"  ❌ Erreur lors de l'analyse: {e}", "error")
+     """
+     Analyse un événement et crée un ticket
+     CORRECTION: Ne pas interrompre pendant l'analyse IA
+     """
+     try:
+        # ✅ NE VÉRIFIER L'ARRÊT QU'AU DÉBUT
+        if not self.monitoring and not self.initial_check_running:
+            self.log_message("  🛑 Analyse annulée (arrêt demandé)", "warning")
             return False
+        
+        # 1. Recherche web (rapide, peut être interrompue)
+        self.log_message(f"  🌐 Recherche d'informations en ligne...", "info")
+        web_results = self.web_searcher.search(event)
+        
+        # 2. Analyse IA (CRITIQUE: ne pas interrompre)
+        self.log_message(f"  🤖 Analyse IA en cours...", "info")
+        
+        # ⚠️ IMPORTANT: Ne plus vérifier stop_requested pendant l'analyse
+        # L'analyseur IA va maintenant terminer son analyse même si arrêt demandé
+        analysis = self.ai_analyzer.analyze(event, web_results)
+        
+        # 3. Vérifier si on a obtenu une analyse
+        if not analysis:
+            self.log_message("  ⚠️ Aucune analyse IA obtenue", "warning")
+            analysis = f"""🔍 ANALYSE AUTOMATIQUE:
+            Erreur détectée mais aucune analyse IA disponible.
+
+            Event ID: {event['event_id']}
+            Source: {event['source']}
+            Type: {event['event_type']}
+
+        Recommandation: Vérifier les logs manuellement."""
+        
+        # 4. Extraire les liens web
+        web_links = []
+        if web_results:
+            import re
+            for match in re.finditer(r'🔗 (https?://[^\s]+)', web_results):
+                web_links.append(match.group(1))
+        
+        # 5. Créer le ticket (TOUJOURS)
+        self.log_message(f"  📝 Création du ticket...", "info")
+        ticket_path = self.ticket_manager.create_or_update_ticket(
+            event, analysis, web_links, 
+            lambda msg: self.log_message(msg, "success")
+        )
+        
+        if ticket_path:
+            self.log_message(f"  ✅ Ticket créé: {os.path.basename(ticket_path)}", "success")
+            return True
+        else:
+            self.log_message(f"  ⚠️ Échec création ticket", "warning")
+            return False
+        
+     except Exception as e:
+        self.log_message(f"  ❌ Erreur lors de l'analyse: {e}", "error")
+        import traceback
+        self.log_message(f"  Détails: {traceback.format_exc()}", "error")
+        return False
     
     def load_tickets(self):
         total, today = self.ticket_tree_view.load_tickets()
@@ -435,7 +437,7 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         if messagebox.askyesno("Nettoyage", "Supprimer les incidents de plus de 30 jours ?"):
             cleaned = self.ticket_manager.cleanup_old_tickets()
             if cleaned:
-                self.log_message(f"🗑️ {cleaned} incident(s) supprimés", "success")
+                self.log_message(f"🗑 {cleaned} incident(s) supprimés", "success")
                 self.refresh_tickets()
             else:
                 self.log_message("✅ Aucun incident à supprimer", "info")

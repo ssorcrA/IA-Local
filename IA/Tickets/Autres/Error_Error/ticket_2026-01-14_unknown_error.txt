@@ -1,0 +1,84 @@
+╔═══════════════════════════════════════════════════════════╗
+║     ❓ AUTRES - 🟢 🟢 BASSE 3/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-14 14:14:28
+🔢 TYPE D'ERREUR: ERROR (UNKNOWN)
+📊 OCCURRENCES: 1
+🎯 PRIORITÉ: 🟢 BASSE 3/10
+📌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: ❓ Autres
+
+─────────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-SystemDataArchiver
+  • IP/Appareil: SRV-AD.DOMAD.axen
+  • Première détection: Wed Jan 14 13:47:00 2026
+  • Severity: UNKNOWN
+  • Type d'erreur: ERROR
+
+─────────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS failed with error 1 for volume path '\\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\', skipping query of its disks.".>...
+
+─────────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Wed Jan 14 13:47:00 2026
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+─────────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+Analyse de l'erreur :
+
+L'erreur reportée est un événement d'avertissement (WARNING) avec un ID 2051 provenant de la source Microsoft-Windows-SystemDataArchiver. L'événement indique que la commande IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS a échoué avec un code d'erreur 1 pour le volume path \\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\.
+
+Diagnose :
+
+* L'erreur est liée à la lecture des informations de disque du volume Windows Server.
+* Le code d'erreur 1 indique une erreur de système, ce qui suggère que le problème pourrait être lié à un problème de configuration ou de compatibilité entre le système et les périphériques.
+* L'impact sur le système est potentiellement important, car cela peut affecter la fonctionnalité des applications qui utilisent les informations de disque.
+
+Solution immédiate :
+
+1. Vérifier si l'historique du volume est correct :
+ * Exécuter la commande `volume` pour afficher les informations du volume (ex : `volume \\?\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}`).
+2. Vérifier si le disque est connecté et fonctionnel :
+ * Exécuter la commande `diskpart` pour vérifier l'état du disque (ex : `diskpart > list disk`).
+
+Solution complète :
+
+1. Mettre à jour les drivers de disque :
+ * Vérifier si les drivers de disque sont à jour et mis à jour.
+2. Réinitialiser le disque :
+ * Exécuter la commande `diskpart > reset disk` pour réinitialiser le disque.
+3. Vérifier les paramètres de sécurité des services :
+ * Vérifier si les services qui utilisent les informations de disque sont configurés correctement et ont les droits nécessaires.
+
+Prévention :
+
+* Vérifier régulièrement l'historique des erreurs pour détecter les problèmes potentiels avant qu'ils ne deviennent graves.
+* Mettre à jour régulièrement les drivers et les pilotes pour éviter les problèmes de compatibilité.
+* Assurer que les services qui utilisent les informations de disque sont configurés correctement et ont les droits nécessaires.
+
+Il est important de noter que cette analyse est basée sur le contexte donné et peut ne pas être applicable à tous les systèmes. Il est recommandé de consulter la documentation du système ou de contacter un support technique pour obtenir des conseils spécifiques.
+
+─────────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+─────────────────────────────────────────────────────────────
+
+📌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-14 14:14:28
+📈 TENDANCE: NOUVELLE DÉTECTION
+
+═════════════════════════════════════════════════════════════

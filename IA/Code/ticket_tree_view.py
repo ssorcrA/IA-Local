@@ -1,10 +1,15 @@
+"""
+TreeView pour afficher : Catégorie > IP > Tickets
+Fichier : ticket_tree_view.py - VERSION CORRIGÉE
+Structure: Catégorie/IP_xxx_xxx_xxx_xxx/ticket_xxx.txt
+"""
 import os
 import re
 from datetime import datetime
 from tkinter import ttk
 
 class TicketTreeView:
-    """TreeView pour afficher : Catégorie > Event_ID > Tickets"""
+    """TreeView pour afficher : Catégorie > IP > Tickets"""
     
     def __init__(self, parent, output_dir, log_callback):
         self.output_dir = output_dir
@@ -13,7 +18,7 @@ class TicketTreeView:
         cols = ('Date', 'Type', 'Source', 'Event ID', 'Ordinateur', 'Occurrences', 'Priorité', 'Taille')
         self.tree = ttk.Treeview(parent, columns=cols, show='tree headings', height=18)
         
-        self.tree.heading('#0', text='📁 Catégorie / 🆔 Event ID / 📄 Ticket')
+        self.tree.heading('#0', text='📁 Catégorie / 📍 IP / 📄 Ticket')
         self.tree.column('#0', width=350, minwidth=250)
         
         col_widths = {
@@ -26,7 +31,7 @@ class TicketTreeView:
             self.tree.column(col, width=col_widths.get(col, 100))
     
     def load_tickets(self):
-        """Charge les tickets avec structure : Catégorie > Event_ID > Tickets"""
+        """Charge les tickets avec structure : Catégorie > IP > Tickets"""
         self.tree.delete(*self.tree.get_children())
         
         if not os.path.exists(self.output_dir):
@@ -45,46 +50,46 @@ class TicketTreeView:
             
             # Compter les tickets dans cette catégorie (récursif)
             ticket_count = 0
-            for event_folder in os.listdir(category_path):
-                event_path = os.path.join(category_path, event_folder)
-                if os.path.isdir(event_path):
-                    ticket_count += len([f for f in os.listdir(event_path) if f.startswith('ticket_')])
+            for ip_folder in os.listdir(category_path):
+                ip_path = os.path.join(category_path, ip_folder)
+                if os.path.isdir(ip_path):
+                    ticket_count += len([f for f in os.listdir(ip_path) if f.startswith('ticket_')])
             
             category_display = f"📁 {category} ({ticket_count} ticket{'s' if ticket_count != 1 else ''})"
             category_id = self.tree.insert('', 'end', text=category_display, open=False)
             
-            # Parcourir les Event_ID
-            for event_folder in sorted(os.listdir(category_path)):
-                event_path = os.path.join(category_path, event_folder)
+            # Parcourir les dossiers IP
+            for ip_folder in sorted(os.listdir(category_path)):
+                ip_path = os.path.join(category_path, ip_folder)
                 
-                if not os.path.isdir(event_path) or not event_folder.startswith('Event_'):
+                if not os.path.isdir(ip_path) or not ip_folder.startswith('IP_'):
                     continue
                 
-                # Extraire Event ID du nom du dossier
-                event_id = event_folder.replace('Event_', '')
+                # Extraire l'IP du nom du dossier
+                ip_display = ip_folder.replace('IP_', '').replace('_', '.')
                 
-                # Compter les tickets dans cet Event_ID
+                # Compter les tickets dans cet IP
                 tickets = sorted(
-                    [f for f in os.listdir(event_path) if f.startswith('ticket_')],
+                    [f for f in os.listdir(ip_path) if f.startswith('ticket_')],
                     reverse=True
                 )
                 
                 if not tickets:
                     continue
                 
-                event_display = f"🆔 Event {event_id} ({len(tickets)} ticket{'s' if len(tickets) != 1 else ''})"
-                event_id_node = self.tree.insert(category_id, 'end', text=event_display, open=False)
+                ip_display_full = f"📍 {ip_display} ({len(tickets)} ticket{'s' if len(tickets) != 1 else ''})"
+                ip_node = self.tree.insert(category_id, 'end', text=ip_display_full, open=False)
                 
                 # Ajouter les tickets
                 for ticket in tickets:
-                    ticket_path = os.path.join(event_path, ticket)
+                    ticket_path = os.path.join(ip_path, ticket)
                     total += 1
                     
                     try:
                         values = self._extract_ticket_info(ticket_path)
                         display_name = f"📄 {ticket}"
                         
-                        self.tree.insert(event_id_node, 'end', text=display_name, 
+                        self.tree.insert(ip_node, 'end', text=display_name, 
                                        values=values, tags=('ticket',))
                         
                         if self._is_today(values[0]):
@@ -107,6 +112,10 @@ class TicketTreeView:
         occ_match = re.search(r'📊 OCCURRENCES: (\d+)', content)
         priority_match = re.search(r'🎯 PRIORITÉ: (.+)', content)
         
+        # Extraire IP/Computer
+        ip_match = re.search(r'IP/Appareil: (.+)', content)
+        computer = ip_match.group(1) if ip_match else (computer_match.group(1) if computer_match else 'N/A')
+        
         size = os.path.getsize(ticket_path) / 1024
         
         return (
@@ -114,7 +123,7 @@ class TicketTreeView:
             type_match.group(1) if type_match else 'N/A',
             source_match.group(1) if source_match else 'N/A',
             event_id_match.group(1) if event_id_match else 'N/A',
-            computer_match.group(1) if computer_match else 'N/A',
+            computer,
             occ_match.group(1) if occ_match else '1',
             priority_match.group(1) if priority_match else 'N/A',
             f"{size:.1f} KB"
@@ -133,8 +142,8 @@ class TicketTreeView:
         search_term = search_term.lower()
         
         for category in self.tree.get_children():
-            for event_node in self.tree.get_children(category):
-                for ticket in self.tree.get_children(event_node):
+            for ip_node in self.tree.get_children(category):
+                for ticket in self.tree.get_children(ip_node):
                     values = self.tree.item(ticket)['values']
                     text = self.tree.item(ticket)['text']
                     
@@ -152,21 +161,22 @@ class TicketTreeView:
         
         item = selection[0]
         
-        # Remonter la hiérarchie : ticket > event_id > category
-        event_node = self.tree.parent(item)
-        if not event_node:
+        # Remonter la hiérarchie : ticket > ip > category
+        ip_node = self.tree.parent(item)
+        if not ip_node:
             return None
         
-        category_node = self.tree.parent(event_node)
+        category_node = self.tree.parent(ip_node)
         if not category_node:
             return None
         
         # Extraire les noms
         category_name = self.tree.item(category_node)['text'].replace('📁 ', '').split(' (')[0]
-        event_name = self.tree.item(event_node)['text'].replace('🆔 ', '').split(' (')[0].replace('Event ', 'Event_')
+        ip_name = self.tree.item(ip_node)['text'].replace('📍 ', '').split(' (')[0]
+        ip_folder = f"IP_{ip_name.replace('.', '_')}"
         ticket_name = self.tree.item(item)['text'].replace('📄 ', '')
         
         # Construire le chemin complet
-        full_path = os.path.join(self.output_dir, category_name, event_name, ticket_name)
+        full_path = os.path.join(self.output_dir, category_name, ip_folder, ticket_name)
         
         return full_path if os.path.exists(full_path) else None

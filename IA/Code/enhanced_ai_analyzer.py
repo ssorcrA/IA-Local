@@ -139,7 +139,7 @@ class EnhancedAIAnalyzer:
                         'num_predict': MAX_TOKENS
                     }
                 },
-                timeout=60  # Timeout raisonnable
+                timeout=1000  # Timeout raisonnable
             )
             
             # Vérifier si arrêt demandé

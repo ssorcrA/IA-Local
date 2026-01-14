@@ -1,10 +1,10 @@
 """
-Threads de surveillance AVEC ARRÊT IMMÉDIAT IA
-Fichier : monitoring_thread.py - VERSION FINALE CORRIGÉE
+Threads de surveillance - VERSION CORRIGÉE
+Fichier : monitoring_thread.py
 CORRECTIFS:
-- Arrêt immédiat de l'IA lors du stop
-- Fermeture des sessions HTTP
-- Pas de logs Syslog en surveillance continue
+- Affiche les vraies statistiques
+- Compte créations vs mises à jour
+- Affiche répartition réelle
 """
 import threading
 from datetime import datetime
@@ -12,7 +12,7 @@ import time
 
 
 class MonitoringThread:
-    """Thread de surveillance continue"""
+    """Thread de surveillance continue avec vraies stats"""
     
     def __init__(self, log_reader, event_filter, analyzer_callback, 
                  refresh_callback, polling_interval):
@@ -25,17 +25,19 @@ class MonitoringThread:
         self.monitoring = False
         self.thread = None
         self.ai_analyzer = None
+        self.ticket_manager = None
     
     def set_ai_analyzer(self, ai_analyzer):
-        """Définit la référence à l'analyseur IA"""
         self.ai_analyzer = ai_analyzer
     
+    def set_ticket_manager(self, ticket_manager):
+        """🔥 NOUVEAU: Passer le ticket_manager pour les stats"""
+        self.ticket_manager = ticket_manager
+    
     def start(self, log_callback, status_callback, ai_analyzer=None):
-        """Démarre la surveillance"""
         if ai_analyzer:
             self.ai_analyzer = ai_analyzer
         
-        # Réinitialiser le flag d'arrêt de l'IA
         if self.ai_analyzer:
             self.ai_analyzer.reset_stop()
         
@@ -48,21 +50,17 @@ class MonitoringThread:
         self.thread.start()
     
     def stop(self):
-        """Arrête la surveillance ET l'IA immédiatement"""
         log_callback = self.thread._args[0] if self.thread and self.thread._args else print
         
         log_callback("🛑 ARRÊT EN COURS...", "warning")
         log_callback("   → Arrêt de la surveillance", "warning")
         
-        # 1. Arrêter le monitoring
         self.monitoring = False
         
-        # 2. CRITIQUE: Arrêter l'IA immédiatement
         if self.ai_analyzer:
             log_callback("   → Interruption de l'IA...", "warning")
             self.ai_analyzer.request_stop()
             
-            # Attendre max 2 secondes que l'IA s'arrête
             wait_time = 0
             while self.ai_analyzer.current_session and wait_time < 2:
                 time.sleep(0.1)
@@ -71,7 +69,6 @@ class MonitoringThread:
             if self.ai_analyzer.current_session:
                 log_callback("   ⚠️ IA forcée à s'arrêter", "warning")
         
-        # 3. Arrêter les lecteurs de logs
         if hasattr(self.log_reader, 'event_reader'):
             log_callback("   → Arrêt EventReader", "warning")
             self.log_reader.event_reader.stop_requested = True
@@ -83,21 +80,22 @@ class MonitoringThread:
         log_callback("✅ Surveillance arrêtée", "success")
     
     def _monitor_loop(self, log_callback, status_callback):
-        """Boucle de surveillance"""
+        """Boucle de surveillance avec vraies stats"""
         while self.monitoring:
             try:
-                # Vérifier arrêt demandé
                 if not self.monitoring:
                     break
                 
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 status_callback(now)
                 
-                # Lecture des événements (SILENCIEUX pour Syslog)
-                log_callback("🔍 Vérification en cours sur toutes les sources...", "info")
+                # 🔥 Réinitialiser les stats du ticket_manager
+                if self.ticket_manager:
+                    self.ticket_manager.reset_stats()
+                
+                log_callback("\n🔍 Vérification en cours sur toutes les sources...", "info")
                 events = self.log_reader.read_new_events()
                 
-                # Vérifier arrêt
                 if not self.monitoring:
                     break
                 
@@ -111,38 +109,45 @@ class MonitoringThread:
                         break
                     
                     if filtered_events:
-                        log_callback(f"\n⚠️ {len(filtered_events)} nouvelle(s) menace(s)!", "warning")
+                        log_callback(f"\n⚠️ {len(filtered_events)} événement(s) à traiter!", "warning")
                         
-                        # Traiter chaque événement
                         for i, event in enumerate(filtered_events, 1):
-                            # Vérifier arrêt AVANT chaque analyse
                             if not self.monitoring:
                                 log_callback(f"\n🛑 Analyse interrompue à {i}/{len(filtered_events)}", "warning")
                                 break
                             
-                            # Vérifier si l'IA a été arrêtée
                             if self.ai_analyzer and self.ai_analyzer.stop_requested:
                                 log_callback(f"\n🛑 IA arrêtée - Abandon des analyses", "warning")
                                 break
                             
-                            log_callback(f"[{i}/{len(filtered_events)}] {event['source']} - Event {event['event_id']}", "warning")
+                            source_info = f"{event['source']}"
+                            event_type = "🔴" if event.get('_priority', 0) >= 7 else "🟡"
+                            log_callback(f"{event_type} [{i}/{len(filtered_events)}] {source_info} - Event {event['event_id']}", "warning")
                             
-                            # L'analyse vérifiera elle-même si arrêt demandé
                             success = self.analyzer_callback(event)
                             
                             if not success or not self.monitoring:
                                 break
                         
-                        # Rafraîchir si surveillance toujours active
                         if self.monitoring:
+                            # 🔥 AFFICHER LES VRAIES STATS
+                            if self.ticket_manager:
+                                stats = self.ticket_manager.get_stats()
+                                log_callback(f"\n📊 STATISTIQUES DE TRAITEMENT:", "success")
+                                log_callback(f"   • Événements détectés: {len(filtered_events)}", "success")
+                                log_callback(f"   • Nouveaux tickets créés: {stats['created']}", "success")
+                                log_callback(f"   • Tickets mis à jour: {stats['updated']}", "success")
+                                log_callback(f"   • TOTAL: {stats['total']} tickets traités\n", "success")
+                            else:
+                                log_callback(f"✅ {len(filtered_events)} incident(s) traités\n", "success")
+                            
                             self.refresh_callback()
-                            log_callback(f"✅ {len(filtered_events)} incident(s) traités\n", "success")
                     else:
                         log_callback(f"✅ {len(events)} événement(s) détectés mais aucun critique\n", "info")
                 else:
                     log_callback("✅ Aucune nouvelle menace\n", "info")
                 
-                # Attente avec vérification d'arrêt toutes les secondes
+                # Attente avec vérification d'arrêt
                 for _ in range(self.polling_interval):
                     if not self.monitoring:
                         break
@@ -157,7 +162,7 @@ class MonitoringThread:
 
 
 class InitialCheckThread:
-    """Thread de vérification initiale 24h"""
+    """Thread de vérification initiale 24h avec vraies stats"""
     
     def __init__(self, log_reader, event_filter, analyzer_callback, 
                  refresh_callback, check_hours):
@@ -170,17 +175,19 @@ class InitialCheckThread:
         self.running = False
         self.thread = None
         self.ai_analyzer = None
+        self.ticket_manager = None
     
     def set_ai_analyzer(self, ai_analyzer):
-        """Définit la référence à l'analyseur IA"""
         self.ai_analyzer = ai_analyzer
     
+    def set_ticket_manager(self, ticket_manager):
+        """🔥 NOUVEAU: Passer le ticket_manager pour les stats"""
+        self.ticket_manager = ticket_manager
+    
     def start(self, log_callback, ai_analyzer=None):
-        """Démarre la vérification"""
         if ai_analyzer:
             self.ai_analyzer = ai_analyzer
         
-        # Réinitialiser le flag d'arrêt de l'IA
         if self.ai_analyzer:
             self.ai_analyzer.reset_stop()
         
@@ -193,21 +200,17 @@ class InitialCheckThread:
         self.thread.start()
     
     def stop(self):
-        """Arrête la vérification ET l'IA immédiatement"""
         log_callback = self.thread._args[0] if self.thread and self.thread._args else print
         
         log_callback("🛑 ARRÊT DE LA VÉRIFICATION...", "warning")
         log_callback("   → Arrêt du scan", "warning")
         
-        # 1. Arrêter la vérification
         self.running = False
         
-        # 2. CRITIQUE: Arrêter l'IA immédiatement
         if self.ai_analyzer:
             log_callback("   → Interruption de l'IA...", "warning")
             self.ai_analyzer.request_stop()
             
-            # Attendre max 2 secondes
             wait_time = 0
             while self.ai_analyzer.current_session and wait_time < 2:
                 time.sleep(0.1)
@@ -216,7 +219,6 @@ class InitialCheckThread:
             if self.ai_analyzer.current_session:
                 log_callback("   ⚠️ IA forcée à s'arrêter", "warning")
         
-        # 3. Arrêter les lecteurs de logs
         if hasattr(self.log_reader, 'event_reader'):
             log_callback("   → Arrêt EventReader", "warning")
             self.log_reader.event_reader.stop_requested = True
@@ -228,13 +230,15 @@ class InitialCheckThread:
         log_callback("✅ Vérification arrêtée", "success")
     
     def _check_loop(self, log_callback):
-        """Boucle de vérification"""
+        """Boucle de vérification avec vraies stats"""
         try:
-            # Lecture des événements
+            # 🔥 Réinitialiser les stats
+            if self.ticket_manager:
+                self.ticket_manager.reset_stats()
+            
             log_callback("📖 Lecture des logs...", "info")
             events = self.log_reader.read_initial_check(hours=self.check_hours)
             
-            # Vérifier arrêt
             if not self.running:
                 log_callback("🛑 Vérification annulée", "warning")
                 return
@@ -255,30 +259,38 @@ class InitialCheckThread:
                 if filtered_events:
                     log_callback(f"\n⚠️ {len(filtered_events)} menaces à analyser\n", "warning")
                     
-                    # Traiter chaque événement
                     for i, event in enumerate(filtered_events, 1):
-                        # Vérifier arrêt AVANT chaque analyse
                         if not self.running:
                             log_callback(f"\n🛑 Analyse interrompue à {i}/{len(filtered_events)}", "warning")
                             break
                         
-                        # Vérifier si l'IA a été arrêtée
                         if self.ai_analyzer and self.ai_analyzer.stop_requested:
                             log_callback(f"\n🛑 IA arrêtée - Abandon des analyses", "warning")
                             break
                         
-                        log_callback(f"[{i}/{len(filtered_events)}] Analyse: {event['source']} - Event {event['event_id']}", "warning")
+                        source_info = f"{event['source']}"
+                        event_type = "🔴" if event.get('_priority', 0) >= 7 else "🟡"
+                        log_callback(f"{event_type} [{i}/{len(filtered_events)}] Analyse: {source_info} - Event {event['event_id']}", "warning")
                         
-                        # L'analyse vérifiera elle-même si arrêt demandé
                         success = self.analyzer_callback(event)
                         
                         if not success or not self.running:
                             break
                     
-                    # Rafraîchir si vérification toujours active
                     if self.running:
+                        # 🔥 AFFICHER LES VRAIES STATS
+                        if self.ticket_manager:
+                            stats = self.ticket_manager.get_stats()
+                            log_callback(f"\n📊 STATISTIQUES FINALES:", "success")
+                            log_callback(f"   • Événements bruts: {len(events)}", "info")
+                            log_callback(f"   • Événements filtrés: {len(filtered_events)}", "info")
+                            log_callback(f"   • Nouveaux tickets créés: {stats['created']}", "success")
+                            log_callback(f"   • Tickets mis à jour: {stats['updated']}", "success")
+                            log_callback(f"   • TOTAL: {stats['total']} tickets traités\n", "success")
+                        else:
+                            log_callback(f"\n✅ Analyse terminée: {len(filtered_events)} incident(s)\n", "success")
+                        
                         self.refresh_callback()
-                        log_callback(f"\n✅ Analyse terminée: {len(filtered_events)} incident(s)\n", "success")
                 else:
                     log_callback(f"\n✅ Aucun événement critique après filtrage\n", "success")
             else:

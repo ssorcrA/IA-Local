@@ -1,16 +1,12 @@
 """
-Configuration OPTIMISÉE - Surveillance Temps Réel + DÉTECTION MAXIMALE
-Fichier : config.py - REMPLACER L'ANCIEN
-CORRECTIFS:
-- Intervalle réduit à 10 secondes
-- Seuil de priorité abaissé à 3 (capture warnings)
-- Détection warnings activée
+Configuration avec MODE DEBUG activé
+Fichier : config.py - REMPLACER TEMPORAIREMENT pour debug
 """
 import os
 from pathlib import Path
 
 APP_NAME = "AD Log Monitor Pro"
-APP_VERSION = "3.2-MaxDetect"
+APP_VERSION = "3.0-DEBUG"
 
 LOG_FILE = r"C:\IA\JournalTransfert\ForwardedEvents.evtx"
 OUTPUT_DIR = r"C:\IA\Tickets"
@@ -20,9 +16,9 @@ SYSLOG_PATH = r"\\SRV-SYSLOG\surveillence$\syslog"
 SYSLOG_ARCHIVE_PATH = r"\\SRV-SYSLOG\surveillence$\archive"
 LOCAL_LOGS_PATH = r"C:\IA\Logs"
 
-# 🔥 OPTIMISATION TEMPS RÉEL
-POLLING_INTERVAL = 10  # 10 SECONDES pour détection rapide
-INITIAL_CHECK_HOURS = 24
+# CORRECTIF: Intervalle réduit pour tests (30 secondes au lieu de 60)
+POLLING_INTERVAL = 30  # Réduit pour détecter plus vite
+INITIAL_CHECK_HOURS = 2  # Réduit de 24 à 2 heures pour tests plus rapides
 CLEANUP_DAYS = 30
 MAX_EVENTS_PER_CYCLE = 100
 
@@ -42,11 +38,14 @@ WEB_SEARCH_ENABLED = True
 WEB_SEARCH_TIMEOUT = 10
 MAX_WEB_RESULTS = 3
 
-# 🔥 SEUIL ABAISSÉ POUR CAPTURER PLUS D'ÉVÉNEMENTS
-# 3 = Capture warnings(6), errors(8), critiques(10)
-# Ignore seulement info(2) et debug(1)
-MIN_PRIORITY_THRESHOLD = 3  # ← ABAISSÉ DE 5 À 3
+# CORRECTIF: Seuil abaissé de 4 à 3 pour capturer plus d'événements
+MIN_PRIORITY_THRESHOLD = 3  # Abaissé pour tests
 ENABLE_ONLINE_SEVERITY_CHECK = True
+
+# MODE DEBUG
+DEBUG_MODE = True  # Active les logs détaillés
+VERBOSE_SYSLOG = True  # Active le mode verbose pour Syslog
+VERBOSE_EVENTS = True  # Active le mode verbose pour ForwardedEvents
 
 SMTP_ENABLED = False
 SMTP_SERVER = "smtp.office365.com"
@@ -57,26 +56,21 @@ SMTP_FROM = ""
 SMTP_TO = ["admin@example.com"]
 
 MONITORED_DEVICES = {
-    '192.168.10.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
-    '192.168.10.10': {'name': 'Active Directory', 'type': 'Server', 'icon': '🖥️', 'priority_boost': 2},
-    '192.168.10.110': {'name': 'Serveur-IA','type': 'Server', 'icon': '🤖', 'priority_boost': 1},
-    '192.168.10.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
-    '192.168.10.16': {'name': 'Switch Secondaire', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
-    '192.168.10.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
+    '192.168.1.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
+    '192.168.1.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
+    '192.168.1.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
 }
 
 DEVICE_CATEGORIES = {
-    'Serveur AD': {'keywords': ['192.168.10.10','DC', 'Active Directory', 'LDAP', 'DNS', 'Kerberos', 'NTDS', 'DFS'], 'icon': '🖥️', 'priority_boost': 2},
-    'Serveur IA': {'keywords': ['192.168.10.110','IA', 'Ollama', 'AI', 'Machine Learning', 'GPU'], 'icon': '🤖', 'priority_boost': 1},
-    'Stormshield': {'keywords': ['192.168.10.254', 'Stormshield', 'firewall', 'utm'], 'icon': '🔥', 'priority_boost': 3},
-    'Switch Principal': {'keywords': ['192.168.10.15', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 2},
-    'Switch Secondaire': {'keywords': ['192.168.10.16', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 2},
-    'Borne WiFi': {'keywords': ['192.168.10.11', 'WiFi', 'wireless', 'SSID', 'AP'], 'icon': '📡', 'priority_boost': 1},
+    'Serveur AD': {'keywords': ['DC', 'Active Directory', 'LDAP', 'DNS', 'Kerberos', 'NTDS', 'DFS'], 'icon': '🖥️', 'priority_boost': 2},
+    'Serveur IA': {'keywords': ['IA', 'Ollama', 'AI', 'Machine Learning', 'GPU'], 'icon': '🤖', 'priority_boost': 1},
+    'Stormshield': {'keywords': ['192.168.1.254', 'Stormshield', 'firewall', 'utm'], 'icon': '🔥', 'priority_boost': 3},
+    'Switch': {'keywords': ['192.168.1.15', 'Switch', 'switch', 'port', 'vlan'], 'icon': '🔌', 'priority_boost': 1},
+    'Borne WiFi': {'keywords': ['192.168.1.11', 'WiFi', 'wireless', 'SSID', 'AP'], 'icon': '📡', 'priority_boost': 1},
     'Serveurs': {'keywords': ['Server', 'SRV-', 'Windows Server'], 'icon': '💻', 'priority_boost': 1},
     'Autres': {'keywords': [], 'icon': '❓', 'priority_boost': 0}
 }
 
-# Event IDs critiques (inchangés)
 CRITICAL_EVENT_IDS = {
     1102: 10, 4719: 10, 4794: 10,
     4765: 9, 7045: 9, 4697: 9,
@@ -121,9 +115,9 @@ def validate_config():
             pass
     
     if not ollama_available:
-        issues.append("Ollama n'est pas accessible. Vérifiez qu'il est démarré.")
+        issues.append("Ollama n'est pas accessible.")
     if not ollama_available and not any([ANTHROPIC_API_KEY, OPENAI_API_KEY, GROQ_API_KEY]):
-        issues.append("Aucune API d'IA configurée (ni Ollama, ni API externe)")
+        issues.append("Aucune API d'IA configurée")
     return issues
 
 def get_ollama_url():
@@ -151,10 +145,10 @@ def get_ollama_web_url():
 if __name__ == "__main__":
     print(f"Configuration {APP_NAME} v{APP_VERSION}")
     print("=" * 60)
-    print("\n🔥 MODE DÉTECTION MAXIMALE ACTIVÉ")
+    print("\n⚠️  MODE DEBUG ACTIVÉ")
     print("=" * 60)
     ensure_directories()
-    print("✔ Répertoires créés")
+    print("✓ Répertoires créés")
     issues = validate_config()
     if issues:
         print("\n⚠️  Problèmes détectés:")
@@ -164,12 +158,8 @@ if __name__ == "__main__":
         print("\n✅ Configuration valide")
     print(f"\n🤖 URL Ollama API: {get_ollama_url()}")
     print(f"🌐 URL Ollama Web: {get_ollama_web_url()}")
-    print(f"\n📊 PARAMÈTRES DÉTECTION MAXIMALE:")
-    print(f"  • Polling: {POLLING_INTERVAL}s (détection rapide)")
-    print(f"  • Seuil priorité: {MIN_PRIORITY_THRESHOLD}/10 (capture warnings + errors)")
-    print(f"  • Check initial: {INITIAL_CHECK_HOURS}h")
-    print(f"\n✅ Détection configurée pour :")
-    print(f"  🔴 Alerts/Critiques (10)")
-    print(f"  🔴 Errors (8)")
-    print(f"  🟡 Warnings (6)")
-    print(f"  ℹ️ Notices importantes (4-5)")
+    print(f"\n📊 PARAMÈTRES DEBUG:")
+    print(f"  • Polling: {POLLING_INTERVAL}s (réduit pour tests)")
+    print(f"  • Check initial: {INITIAL_CHECK_HOURS}h (réduit pour tests)")
+    print(f"  • Seuil priorité: {MIN_PRIORITY_THRESHOLD}/10 (abaissé)")
+    print(f"  • Mode verbose: Activé")

@@ -1,0 +1,101 @@
+╔═══════════════════════════════════════════════════════════╗
+║     ❓ AUTRES - 🟢 🟢 BASSE 3/10     ║
+╚═══════════════════════════════════════════════════════════╝
+
+📅 CRÉÉ LE: 2026-01-14 13:42:34
+📊 OCCURRENCES: 1
+🔢 MACHINES AFFECTÉES: 1
+⚠️ TYPE: WARNING
+🎯 PRIORITÉ: 🟢 BASSE 3/10
+🔌 STATUT: 🟢 BASSE - INFORMATION
+🏷️ CATÉGORIE: ❓ Autres
+
+─────────────────────────────────────────────────────────
+
+📊 INFORMATIONS TECHNIQUES:
+  • Source: Microsoft-Windows-SystemDataArchiver
+  • Event ID: 2051
+  • Première détection: Wed Jan 14 13:17:00 2026
+
+💻 ORDINATEURS AFFECTÉS:
+  [1] SRV-AD.DOMAD.axen
+
+─────────────────────────────────────────────────────────
+
+📄 MESSAGE D'ERREUR:
+<The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS failed with error 1 for volume path '\\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\', skipping query of its disks.".>...
+
+─────────────────────────────────────────────────────────
+
+📜 HISTORIQUE DES OCCURRENCES:
+
+[1] Wed Jan 14 13:17:00 2026 - Record #8965
+    Computer: SRV-AD.DOMAD.axen
+    Message: <The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DIS...
+
+─────────────────────────────────────────────────────────
+
+🤖 ANALYSE & SOLUTION:
+Analyse de l'erreur :
+
+L'erreur reportée est un avertissement (Type d'erreur : WARNING) émis par le logiciel Microsoft-Windows-SystemDataArchiver, qui indique que la requête pour obtenir les informations sur le volume disque (IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS) a échoué avec un code d'erreur 1.
+
+Analyse du problème :
+
+L'erreur indique que la requête pour obtenir les informations sur le volume disque a échoué, ce qui peut être dû à plusieurs raisons :
+
+* Un problème de configuration du système
+* Un problème de disque dur ou de support de données
+* Un problème de sécurité ou de droits d'accès
+
+Impact sur le système :
+
+Cette erreur ne semble pas avoir un impact direct sur la stabilité du système, mais elle peut être un signe d'un problème sous-jacent qui doit être résolu pour éviter les problèmes futurs.
+
+Solutions immédiates :
+
+1. Vérifier l'état des disques dur et de données :
+ * Ouvrir une fenêtre de commande en tant qu'administrateur : `cmd /c powercfg -duplicates`
+ * Vérifier l'état des disques dur et de données pour identifier les disques qui ont un problème.
+2. Vérifier la configuration du système :
+
+* Vérifier que le système est configuré correctement pour utiliser les disques dur et de données.
+* Vérifier que les droits d'accès sont corrects pour l'utilisateur qui exécute la commande.
+
+Réolution complète :
+
+1. Mettre à jour le système :
+ * Mettre à jour le système avec la dernière version disponible du logiciel Microsoft-Windows-SystemDataArchiver.
+2. Analyser et résoudre les problèmes des disques dur et de données :
+ * Vérifier l'état des disques dur et de données pour identifier les disques qui ont un problème.
+ * Réparer ou remplacez les disques dur et de données si nécessaire.
+3. Vérifier la configuration du système :
+ * Vérifier que le système est configuré correctement pour utiliser les disques dur et de données.
+ * Vérifier que les droits d'accès sont corrects pour l'utilisateur qui exécute la commande.
+
+Prévention :
+
+1. Effectuer régulièrement des vérifications des disques dur et de données :
+ * Effectuer des vérifications régulières des disques dur et de données pour identifier les problèmes avant qu'ils ne se produisent.
+2. Mettre à jour le système régulièrement :
+ * Mettre à jour le système régulièrement avec la dernière version disponible du logiciel Microsoft-Windows-SystemDataArchiver.
+3. Vérifier la configuration du système régulièrement :
+ * Vérifier la configuration du système régulièrement pour garantir que les disques dur et de données sont correctement configurés.
+
+En résumé, il est important de vérifier l'état des disques dur et de données, de mettre à jour le système et de vérifier la configuration du système pour résoudre ce problème et éviter sa récurrence.
+
+─────────────────────────────────────────────────────────
+
+📋 ACTIONS RECOMMANDÉES:
+  1. 📊 MONITORER la situation
+  2. 📝 NOTER pour référence future
+  3. ✅ APPLIQUER si temps disponible
+
+─────────────────────────────────────────────────────────
+
+🔌 STATUT ACTUEL: NOUVEAU
+🔔 NÉCESSITE ACTION: SURVEILLANCE
+⏰ DERNIÈRE MISE À JOUR: 2026-01-14 13:42:34
+📈 TENDANCE: NOUVELLE DÉTECTION
+
+═══════════════════════════════════════════════════════════
