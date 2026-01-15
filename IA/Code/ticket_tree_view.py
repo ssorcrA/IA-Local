@@ -1,7 +1,7 @@
 """
-TreeView pour afficher : Catégorie > IP > Tickets
-Fichier : ticket_tree_view.py - VERSION CORRIGÉE
-Structure: Catégorie/IP_xxx_xxx_xxx_xxx/ticket_xxx.txt
+TreeView pour afficher : APPAREIL > TYPE_ERREUR > Tickets
+Fichier : ticket_tree_view.py - VERSION CORRIGÉE v2
+Structure: APPAREIL/TYPE_ERREUR/ticket_xxx.txt
 """
 import os
 import re
@@ -9,21 +9,21 @@ from datetime import datetime
 from tkinter import ttk
 
 class TicketTreeView:
-    """TreeView pour afficher : Catégorie > IP > Tickets"""
+    """TreeView pour afficher : APPAREIL > TYPE_ERREUR > Tickets"""
     
     def __init__(self, parent, output_dir, log_callback):
         self.output_dir = output_dir
         self.log_callback = log_callback
         
-        cols = ('Date', 'Type', 'Source', 'Event ID', 'Ordinateur', 'Occurrences', 'Priorité', 'Taille')
+        cols = ('Date', 'Type', 'Source', 'Event ID', 'Occurrences', 'Priorité', 'Taille')
         self.tree = ttk.Treeview(parent, columns=cols, show='tree headings', height=18)
         
-        self.tree.heading('#0', text='📁 Catégorie / 📍 IP / 📄 Ticket')
-        self.tree.column('#0', width=350, minwidth=250)
+        self.tree.heading('#0', text='🖥️ Appareil / 📂 Type Erreur / 📄 Ticket')
+        self.tree.column('#0', width=400, minwidth=300)
         
         col_widths = {
-            'Date': 150, 'Type': 80, 'Source': 180, 'Event ID': 80,
-            'Ordinateur': 130, 'Occurrences': 100, 'Priorité': 100, 'Taille': 80
+            'Date': 150, 'Type': 100, 'Source': 200, 'Event ID': 100,
+            'Occurrences': 100, 'Priorité': 120, 'Taille': 80
         }
         
         for col in cols:
@@ -31,7 +31,7 @@ class TicketTreeView:
             self.tree.column(col, width=col_widths.get(col, 100))
     
     def load_tickets(self):
-        """Charge les tickets avec structure : Catégorie > IP > Tickets"""
+        """Charge les tickets avec structure : APPAREIL > TYPE_ERREUR > Tickets"""
         self.tree.delete(*self.tree.get_children())
         
         if not os.path.exists(self.output_dir):
@@ -41,55 +41,66 @@ class TicketTreeView:
         today_count = 0
         today = datetime.now().date()
         
-        # Parcourir les catégories
-        for category in sorted(os.listdir(self.output_dir)):
-            category_path = os.path.join(self.output_dir, category)
+        # Parcourir les appareils
+        for device_folder in sorted(os.listdir(self.output_dir)):
+            device_path = os.path.join(self.output_dir, device_folder)
             
-            if not os.path.isdir(category_path) or category.startswith('.'):
+            if not os.path.isdir(device_path) or device_folder.startswith('.'):
                 continue
             
-            # Compter les tickets dans cette catégorie (récursif)
+            # Compter les tickets dans cet appareil (récursif)
             ticket_count = 0
-            for ip_folder in os.listdir(category_path):
-                ip_path = os.path.join(category_path, ip_folder)
-                if os.path.isdir(ip_path):
-                    ticket_count += len([f for f in os.listdir(ip_path) if f.startswith('ticket_')])
+            for error_type_folder in os.listdir(device_path):
+                error_type_path = os.path.join(device_path, error_type_folder)
+                if os.path.isdir(error_type_path):
+                    ticket_count += len([f for f in os.listdir(error_type_path) if f.startswith('ticket_')])
             
-            category_display = f"📁 {category} ({ticket_count} ticket{'s' if ticket_count != 1 else ''})"
-            category_id = self.tree.insert('', 'end', text=category_display, open=False)
+            # Icônes par appareil
+            device_icons = {
+                'Serveur AD': '🖥️',
+                'Serveur IA': '🤖',
+                'Stormshield': '🔥',
+                'Switch Principal': '🔌',
+                'Switch Secondaire': '🔌',
+                'Borne WiFi': '📡',
+                'Autres': '❓'
+            }
+            icon = device_icons.get(device_folder, '📟')
             
-            # Parcourir les dossiers IP
-            for ip_folder in sorted(os.listdir(category_path)):
-                ip_path = os.path.join(category_path, ip_folder)
+            device_display = f"{icon} {device_folder} ({ticket_count} ticket{'s' if ticket_count != 1 else ''})"
+            device_id = self.tree.insert('', 'end', text=device_display, open=False)
+            
+            # Parcourir les types d'erreurs
+            for error_type_folder in sorted(os.listdir(device_path)):
+                error_type_path = os.path.join(device_path, error_type_folder)
                 
-                if not os.path.isdir(ip_path) or not ip_folder.startswith('IP_'):
+                if not os.path.isdir(error_type_path):
                     continue
                 
-                # Extraire l'IP du nom du dossier
-                ip_display = ip_folder.replace('IP_', '').replace('_', '.')
-                
-                # Compter les tickets dans cet IP
+                # Compter les tickets dans ce type d'erreur
                 tickets = sorted(
-                    [f for f in os.listdir(ip_path) if f.startswith('ticket_')],
+                    [f for f in os.listdir(error_type_path) if f.startswith('ticket_')],
                     reverse=True
                 )
                 
                 if not tickets:
                     continue
                 
-                ip_display_full = f"📍 {ip_display} ({len(tickets)} ticket{'s' if len(tickets) != 1 else ''})"
-                ip_node = self.tree.insert(category_id, 'end', text=ip_display_full, open=False)
+                # Afficher le type d'erreur de façon lisible
+                error_display = error_type_folder.replace('_', ' ').replace('Event ', 'Event ID ')
+                error_display_full = f"📂 {error_display} ({len(tickets)} ticket{'s' if len(tickets) != 1 else ''})"
+                error_node = self.tree.insert(device_id, 'end', text=error_display_full, open=False)
                 
                 # Ajouter les tickets
                 for ticket in tickets:
-                    ticket_path = os.path.join(ip_path, ticket)
+                    ticket_path = os.path.join(error_type_path, ticket)
                     total += 1
                     
                     try:
                         values = self._extract_ticket_info(ticket_path)
                         display_name = f"📄 {ticket}"
                         
-                        self.tree.insert(ip_node, 'end', text=display_name, 
+                        self.tree.insert(error_node, 'end', text=display_name, 
                                        values=values, tags=('ticket',))
                         
                         if self._is_today(values[0]):
@@ -105,16 +116,11 @@ class TicketTreeView:
             content = f.read()
         
         date_match = re.search(r'📅 CRÉÉ LE: (.+)', content)
-        type_match = re.search(r'⚠️ TYPE: (.+)', content)
+        type_match = re.search(r'Type: (.+)', content)
         source_match = re.search(r'Source: (.+)', content)
         event_id_match = re.search(r'Event ID: (\d+)', content)
-        computer_match = re.search(r'Computer: (.+)', content)
         occ_match = re.search(r'📊 OCCURRENCES: (\d+)', content)
         priority_match = re.search(r'🎯 PRIORITÉ: (.+)', content)
-        
-        # Extraire IP/Computer
-        ip_match = re.search(r'IP/Appareil: (.+)', content)
-        computer = ip_match.group(1) if ip_match else (computer_match.group(1) if computer_match else 'N/A')
         
         size = os.path.getsize(ticket_path) / 1024
         
@@ -123,7 +129,6 @@ class TicketTreeView:
             type_match.group(1) if type_match else 'N/A',
             source_match.group(1) if source_match else 'N/A',
             event_id_match.group(1) if event_id_match else 'N/A',
-            computer,
             occ_match.group(1) if occ_match else '1',
             priority_match.group(1) if priority_match else 'N/A',
             f"{size:.1f} KB"
@@ -141,9 +146,9 @@ class TicketTreeView:
         """Filtre les tickets par recherche"""
         search_term = search_term.lower()
         
-        for category in self.tree.get_children():
-            for ip_node in self.tree.get_children(category):
-                for ticket in self.tree.get_children(ip_node):
+        for device in self.tree.get_children():
+            for error_type_node in self.tree.get_children(device):
+                for ticket in self.tree.get_children(error_type_node):
                     values = self.tree.item(ticket)['values']
                     text = self.tree.item(ticket)['text']
                     
@@ -161,22 +166,30 @@ class TicketTreeView:
         
         item = selection[0]
         
-        # Remonter la hiérarchie : ticket > ip > category
-        ip_node = self.tree.parent(item)
-        if not ip_node:
+        # Remonter la hiérarchie : ticket > error_type > device
+        error_type_node = self.tree.parent(item)
+        if not error_type_node:
             return None
         
-        category_node = self.tree.parent(ip_node)
-        if not category_node:
+        device_node = self.tree.parent(error_type_node)
+        if not device_node:
             return None
         
         # Extraire les noms
-        category_name = self.tree.item(category_node)['text'].replace('📁 ', '').split(' (')[0]
-        ip_name = self.tree.item(ip_node)['text'].replace('📍 ', '').split(' (')[0]
-        ip_folder = f"IP_{ip_name.replace('.', '_')}"
+        device_name = self.tree.item(device_node)['text']
+        # Retirer l'icône et le compteur
+        device_name = re.sub(r'^[^\s]+\s+', '', device_name)  # Retirer icône
+        device_name = re.sub(r'\s+\(\d+\s+ticket.*\)$', '', device_name)  # Retirer compteur
+        
+        error_type_name = self.tree.item(error_type_node)['text']
+        error_type_name = re.sub(r'^📂\s+', '', error_type_name)
+        error_type_name = re.sub(r'\s+\(\d+\s+ticket.*\)$', '', error_type_name)
+        # Reconvertir en nom de dossier
+        error_type_folder = error_type_name.replace(' ', '_').replace('Event_ID_', 'Event_')
+        
         ticket_name = self.tree.item(item)['text'].replace('📄 ', '')
         
         # Construire le chemin complet
-        full_path = os.path.join(self.output_dir, category_name, ip_folder, ticket_name)
+        full_path = os.path.join(self.output_dir, device_name, error_type_folder, ticket_name)
         
         return full_path if os.path.exists(full_path) else None

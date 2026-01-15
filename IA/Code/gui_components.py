@@ -43,8 +43,12 @@ class ControlPanel:
             'cursor': 'hand2'
         }
         
+        # 🔥 LIGNE 1 : Actions principales
+        row1 = ttk.Frame(self.frame, style='Main.TFrame')
+        row1.pack(fill='x', pady=(0, 10))
+        
         self.start_btn = tk.Button(
-            self.frame, 
+            row1, 
             text="▶ Surveillance",
             command=callbacks['start'],
             bg='#27ae60', fg='white',
@@ -54,7 +58,7 @@ class ControlPanel:
         self.start_btn.pack(side='left', padx=(0, 10))
         
         self.stop_btn = tk.Button(
-            self.frame, 
+            row1, 
             text="⏸ Arrêter",
             command=callbacks['stop'],
             bg='#e74c3c', fg='white',
@@ -65,8 +69,8 @@ class ControlPanel:
         self.stop_btn.pack(side='left', padx=(0, 10))
         
         tk.Button(
-            self.frame, 
-            text="🔄 Actualiser",
+            row1, 
+            text="📄 Actualiser",
             command=callbacks['refresh'],
             bg='#3498db', fg='white',
             activebackground='#2980b9',
@@ -74,7 +78,29 @@ class ControlPanel:
         ).pack(side='left', padx=(0, 10))
         
         tk.Button(
-            self.frame, 
+            row1, 
+            text="🗑 Nettoyer",
+            command=callbacks['cleanup'],
+            bg='#95a5a6', fg='white',
+            activebackground='#7f8c8d',
+            **btn_config
+        ).pack(side='left')
+        
+        # 🔥 LIGNE 2 : Analyses
+        row2 = ttk.Frame(self.frame, style='Main.TFrame')
+        row2.pack(fill='x')
+        
+        tk.Button(
+            row2, 
+            text="🔍 Test 2h",
+            command=callbacks['quick_check'],
+            bg='#f39c12', fg='white',
+            activebackground='#e67e22',
+            **btn_config
+        ).pack(side='left', padx=(0, 10))
+        
+        tk.Button(
+            row2, 
             text="📅 Analyse 24h",
             command=callbacks['initial_check'],
             bg='#e67e22', fg='white',
@@ -83,7 +109,7 @@ class ControlPanel:
         ).pack(side='left', padx=(0, 10))
         
         self.stop_check_btn = tk.Button(
-            self.frame, 
+            row2, 
             text="⏹ Arrêter vérif.",
             command=callbacks['stop_check'],
             bg='#c0392b', fg='white',
@@ -91,16 +117,7 @@ class ControlPanel:
             activebackground='#a93226',
             **btn_config
         )
-        self.stop_check_btn.pack(side='left', padx=(0, 10))
-        
-        tk.Button(
-            self.frame, 
-            text="🗑 Nettoyer",
-            command=callbacks['cleanup'],
-            bg='#95a5a6', fg='white',
-            activebackground='#7f8c8d',
-            **btn_config
-        ).pack(side='left')
+        self.stop_check_btn.pack(side='left')
     
     def set_monitoring_state(self, is_monitoring):
         if is_monitoring:

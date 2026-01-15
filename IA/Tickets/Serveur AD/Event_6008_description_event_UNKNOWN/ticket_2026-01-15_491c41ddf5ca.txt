@@ -1,0 +1,82 @@
+╔═══════════════════════════════════════╗
+║  SERVEUR AD - 🟠 🟠 HAUTE 7/10  ║
+╚═══════════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-15 14:19:32
+📊 OCCURRENCES: 1
+🎯 PRIORITÉ: 🟠 HAUTE 7/10
+📌 STATUT: 🟠 HAUTE - ACTION RAPIDE
+🏷️ APPAREIL: Serveur AD
+📂 TYPE: Event_6008_description_event_UNKNOWN
+🔢 SEVERITY: UNKNOWN
+
+────────────────────────────────────────────────────
+
+📊 INFORMATIONS:
+  • Source: EventLog
+  • Type: Windows Event
+  • Event ID: 6008
+  • Catégorie: ERROR
+  • Détection: Thu Jan 15 07:30:27 2026
+
+────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 6008 ) in Source ( 'EventLog' ) could not be found. It contains the following insertion string(s):'15:26:07, \u200e14/\u200e01/\u200e2026, 28282'.>
+
+────────────────────────────────────────────────────
+
+🤖 ANALYSE:
+Analyse de l'erreur :
+
+L'erreur détectée est un événement logique (Event ID 6008) qui indique que le message d'erreur pour cet événement n'a pas été trouvé dans la source EventLog. L'événement se produit sur un serveur Windows Server nommé SRV-AD.DOMAD.axen.
+
+Analyse détaillée :
+
+* L'événement a lieu à 07h30 le 15 janvier 2026, ce qui suggère qu'il pourrait être lié à une problématique de gestion des logs ou d'un problème système.
+* La priorité est de 7/10, ce qui indique que l'erreur n'est pas critique mais nécessite attention.
+
+Solution immédiate :
+
+1. Vérifier les journaux systemiques pour identifier le problème spécifique :
+```bash
+EventViewer /v /fo:xml /q:"*[System/EventType eq 'Error']"`
+```
+Cette commande affichera tous les événements d'erreur système, qui peuvent aider à identifier la cause de l'événement détecté.
+
+2. Vérifier les journaux de sécurité pour voir si il y a des informations supplémentaires sur l'événement :
+```bash
+EventViewer /l /f /fo:xml /q:"*[System/EventType eq 'Error']"`
+```
+Cette commande affichera les journaux de sécurité, qui peuvent contenir des informations supplémentaires sur la cause de l'événement.
+
+Solution complète :
+
+1. Vérifier les configurations système pour voir si il y a des problèmes avec la gestion des logs :
+```bash
+Get-WinEvent -FilterHashtable @{LogName='System'; EventType='Error'} -First 10`
+```
+Cette commande affichera les 10 derniers événements d'erreur système, qui peuvent aider à identifier la cause de l'événement détecté.
+
+2. Vérifier les journaux de sécurité pour voir si il y a des informations supplémentaires sur l'événement :
+```bash
+Get-WinEvent -FilterHashtable @{LogName='Security'; EventType='Error'} -First 10`
+```
+Cette commande affichera les 10 derniers événements d'erreur de sécurité, qui peuvent contenir des informations supplémentaires sur la cause de l'événement.
+
+3. Si nécessaire, modifier la configuration système pour améliorer la gestion des logs et prévenir de futurs problèmes :
+```bash
+Set-WinEventLog -LogName 'System' -FilterEventID 6008 -MaxSize 10GB
+```
+Cette commande affectera la taille maximale du journal système pour l'événement ID 6008.
+
+Prévention :
+
+1. Regulariser les journaux systemiques et de sécurité régulièrement pour éviter que les erreurs ne se accumulent.
+2. Mettre en place des alertes automatiques pour les événements d'erreur système et de sécurité, ce qui permettra de réagir rapidement à tout changement dans la configuration du système.
+
+En résumé, il est important de vérifier les journaux systemiques et de sécurité pour identifier la cause de l'événement détecté. Si nécessaire, modifier la configuration système pour améliorer la gestion des logs et prévenir de futurs problèmes.
+
+────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-15 14:19:32

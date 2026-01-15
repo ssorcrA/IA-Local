@@ -1,161 +1,256 @@
 """
-Gestionnaire de tickets - VERSION CORRIGÉE
-Fichier : ticket_manager.py
-CORRECTIFS:
-- Regroupement par IP + hash du message
-- Détection correcte des appareils (Windows + Syslog)
-- Ticket UNIQUE par erreur unique, avec compteur
-- Structure: Catégorie/IP_xxx/ticket_hash.txt
+TICKET MANAGER - AVEC DÉTECTION DOUBLONS 30 MINUTES
+Fichier : ticket_manager.py - VERSION FINALE CORRIGÉE
+🔥 CORRECTIF : Retourne TOUJOURS (success: bool, is_new: bool)
 """
 import os
 import json
 import re
 import hashlib
 from datetime import datetime, timedelta, date
-from config import OUTPUT_DIR, CLEANUP_DAYS, MONITORED_DEVICES, DEVICE_CATEGORIES
+from config import OUTPUT_DIR, CLEANUP_DAYS
 
 
 class TicketManager:
-    """Gère les tickets avec regroupement intelligent"""
-    
     def __init__(self, output_dir=OUTPUT_DIR):
         self.output_dir = output_dir
         self.ticket_index_file = os.path.join(output_dir, ".ticket_index.json")
-        self.load_index()
-        self.ensure_category_directories()
+        self.recent_tickets_file = os.path.join(output_dir, ".recent_tickets.json")
         
-        # Stats pour le résumé final
+        self.load_index()
+        self.load_recent_tickets()
+        self.ensure_device_directories()
+        
         self.stats_created = 0
         self.stats_updated = 0
     
-    def ensure_category_directories(self):
-        """Crée les dossiers pour chaque catégorie"""
-        for category in DEVICE_CATEGORIES.keys():
-            category_path = os.path.join(self.output_dir, category)
-            os.makedirs(category_path, exist_ok=True)
+    def ensure_device_directories(self):
+        """Crée tous les dossiers d'appareils"""
+        devices = [
+            'Serveur AD', 
+            'Serveur IA', 
+            'Stormshield',
+            'Switch Principal', 
+            'Switch Secondaire',
+            'Borne WiFi', 
+            'Autres'
+        ]
+        for device in devices:
+            device_path = os.path.join(self.output_dir, device)
+            os.makedirs(device_path, exist_ok=True)
     
-    def detect_category_from_ip(self, ip):
-        """Détecte la catégorie depuis l'IP"""
-        if not ip or ip == 'unknown':
-            return None
-        
-        # Chercher dans MONITORED_DEVICES
-        for device_ip, info in MONITORED_DEVICES.items():
-            if ip == device_ip or device_ip in ip:
-                return info['name']
-        
-        return None
+    def load_recent_tickets(self):
+        """🔥 Charge les tickets récents (pour détection doublons)"""
+        try:
+            if os.path.exists(self.recent_tickets_file):
+                with open(self.recent_tickets_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # Nettoyer les tickets de plus de 30 minutes
+                    cutoff = datetime.now() - timedelta(minutes=30)
+                    self.recent_tickets = {
+                        k: v for k, v in data.items()
+                        if datetime.fromisoformat(v['timestamp']) > cutoff
+                    }
+            else:
+                self.recent_tickets = {}
+        except:
+            self.recent_tickets = {}
     
-    def detect_category_from_text(self, text):
-        """Détecte la catégorie depuis le texte"""
-        text_lower = text.lower()
-        
-        # Parcourir les catégories et leurs keywords
-        for category, info in DEVICE_CATEGORIES.items():
-            keywords = info.get('keywords', [])
-            for keyword in keywords:
-                if keyword.lower() in text_lower:
-                    return category
-        
-        return None
+    def save_recent_tickets(self):
+        """🔥 Sauvegarde les tickets récents"""
+        try:
+            with open(self.recent_tickets_file, 'w', encoding='utf-8') as f:
+                json.dump(self.recent_tickets, f, indent=2)
+        except:
+            pass
     
-    def detect_category(self, event):
+    def is_duplicate_within_30min(self, event):
         """
-        🔥 DÉTECTION AMÉLIORÉE - Ordre de priorité:
-        1. IP de l'appareil (Syslog ou Windows)
-        2. Mots-clés dans source/computer
-        3. "Autres" en dernier recours
+        🔥 DÉTECTION DOUBLON - 30 MINUTES
+        Retourne True si même nom événement + < 30 min
         """
-        # 1. Si c'est du Syslog, utiliser _device_ip
-        if event.get('_is_syslog', False):
-            ip = event.get('_device_ip', '')
-            category = self.detect_category_from_ip(ip)
-            if category:
-                return category
+        device = self.detect_device_from_source(event)
+        event_name = self.get_event_name_for_dedup(event)
         
-        # 2. Extraire IP du champ 'computer' ou 'source' (Windows)
-        computer = event.get('computer', '').lower()
-        source = event.get('source', '').lower()
+        # Clé unique: appareil + nom événement
+        dedup_key = f"{device}_{event_name}"
         
-        # Chercher IP dans computer
-        ip_match = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', computer)
-        if ip_match:
-            ip = ip_match.group(1)
-            category = self.detect_category_from_ip(ip)
-            if category:
-                return category
+        if dedup_key in self.recent_tickets:
+            last_time = datetime.fromisoformat(self.recent_tickets[dedup_key]['timestamp'])
+            time_diff = (datetime.now() - last_time).total_seconds() / 60  # en minutes
+            
+            if time_diff < 30:
+                # C'est un doublon
+                return True, time_diff
         
-        # Chercher IP dans source
-        ip_match = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', source)
-        if ip_match:
-            ip = ip_match.group(1)
-            category = self.detect_category_from_ip(ip)
-            if category:
-                return category
+        return False, 0
+    
+    def mark_ticket_recent(self, event):
+        """🔥 Marque un ticket comme récent"""
+        device = self.detect_device_from_source(event)
+        event_name = self.get_event_name_for_dedup(event)
         
-        # 3. Mots-clés dans source et computer
-        full_text = f"{source} {computer}"
-        category = self.detect_category_from_text(full_text)
-        if category:
-            return category
+        dedup_key = f"{device}_{event_name}"
         
-        # 4. Chercher dans le message complet
-        message = event.get('message', '')
-        category = self.detect_category_from_text(message)
-        if category:
-            return category
+        self.recent_tickets[dedup_key] = {
+            'timestamp': datetime.now().isoformat(),
+            'event_id': event.get('event_id', 0),
+            'device': device
+        }
         
-        # 5. Dernier recours: "Autres"
+        self.save_recent_tickets()
+    
+    def get_event_name_for_dedup(self, event):
+        """
+        🔥 Génère un nom d'événement pour détection doublons
+        Basé sur Event ID + mots-clés principaux du message
+        """
+        event_id = event.get('event_id', 0)
+        message = event.get('message', '').lower()
+        
+        # Extraire les mots-clés significatifs (sans les détails variables)
+        # Retirer IPs, timestamps, nombres
+        message_clean = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', '', message)
+        message_clean = re.sub(r'\d{4}-\d{2}-\d{2}', '', message_clean)
+        message_clean = re.sub(r'\d{2}:\d{2}:\d{2}', '', message_clean)
+        message_clean = re.sub(r'\b\d+\b', '', message_clean)
+        
+        # Extraire mots significatifs (> 4 lettres)
+        words = re.findall(r'\b[a-z]{4,}\b', message_clean)
+        # Garder les 5 premiers mots significatifs
+        keywords = '_'.join(words[:5]) if words else 'generic'
+        
+        return f"Event_{event_id}_{keywords}"
+    
+    def should_force_ticket_creation(self, event):
+        """
+        🔥 RÈGLE STORMSHIELD/BORNE WIFI
+        ALERT et WARNING = ticket automatique (sauf doublon 30 min)
+        """
+        device = self.detect_device_from_source(event)
+        severity = event.get('_severity', '').lower()
+        
+        # 🔥 Appareils concernés
+        if device not in ['Stormshield', 'Borne WiFi']:
+            return False
+        
+        # 🔥 Severities concernées
+        if severity not in ['alert', 'warning', 'error', 'critical', 'emergency']:
+            return False
+        
+        # 🔥 Vérifier si doublon récent
+        is_dup, time_diff = self.is_duplicate_within_30min(event)
+        
+        if is_dup:
+            # C'est un doublon récent, ne pas créer de ticket
+            return False
+        
+        # OK pour créer un ticket
+        return True
+    
+    def detect_device_from_source(self, event):
+        """
+        🔥 DÉTECTION APPAREIL - VERSION ROBUSTE COMPLÈTE
+        Priorité : IP > Computer > Source > Device_name > Analyse message
+        """
+        
+        # 🔥 ÉTAPE 1 : IP DIRECTE (la plus fiable)
+        device_ip = event.get('_device_ip', '').strip()
+        
+        ip_to_device = {
+            '192.168.10.254': 'Stormshield',
+            '192.168.10.11': 'Borne WiFi',
+            '192.168.10.15': 'Switch Principal',
+            '192.168.10.16': 'Switch Secondaire',
+            '192.168.10.10': 'Serveur AD',
+            '192.168.10.110': 'Serveur IA',
+        }
+        
+        if device_ip in ip_to_device:
+            return ip_to_device[device_ip]
+        
+        # 🔥 ÉTAPE 2 : CHAMP COMPUTER (IP ou hostname)
+        computer = event.get('computer', '').strip()
+        
+        if computer in ip_to_device:
+            return ip_to_device[computer]
+        
+        # Computer peut contenir un hostname
+        computer_lower = computer.lower()
+        if 'stormshield' in computer_lower or 'firewall' in computer_lower:
+            return 'Stormshield'
+        elif 'wifi' in computer_lower or 'borne' in computer_lower or 'wap' in computer_lower:
+            return 'Borne WiFi'
+        elif 'switch' in computer_lower:
+            if '15' in computer or 'principal' in computer_lower or 'main' in computer_lower:
+                return 'Switch Principal'
+            elif '16' in computer or 'secondaire' in computer_lower or 'secondary' in computer_lower:
+                return 'Switch Secondaire'
+            else:
+                return 'Switch Principal'
+        elif 'ad' in computer_lower or 'dc' in computer_lower or 'domain' in computer_lower:
+            return 'Serveur AD'
+        elif 'ia' in computer_lower or 'ai' in computer_lower or 'ollama' in computer_lower:
+            return 'Serveur IA'
+        
+        # 🔥 ÉTAPE 3 : SOURCE (contient souvent l'appareil)
+        source = event.get('source', '').strip()
+        source_lower = source.lower()
+        
+        # Vérifier IP dans source
+        for ip, device in ip_to_device.items():
+            if ip in source:
+                return device
+        
+        # Vérifier mots-clés dans source
+        if 'stormshield' in source_lower or 'firewall' in source_lower:
+            return 'Stormshield'
+        elif 'wifi' in source_lower or 'borne' in source_lower or 'wap' in source_lower:
+            return 'Borne WiFi'
+        elif 'switch' in source_lower:
+            if '15' in source or 'principal' in source_lower:
+                return 'Switch Principal'
+            elif '16' in source or 'secondaire' in source_lower:
+                return 'Switch Secondaire'
+            else:
+                return 'Switch Principal'
+        elif 'ad' in source_lower or 'active directory' in source_lower or 'ldap' in source_lower:
+            return 'Serveur AD'
+        elif 'ia' in source_lower or 'serveur-ia' in source_lower or 'ollama' in source_lower:
+            return 'Serveur IA'
+        
+        # 🔥 ÉTAPE 4 : DEVICE_NAME (depuis syslog_reader)
+        device_name = event.get('_device_name', '').strip()
+        
+        if device_name:
+            device_name_lower = device_name.lower()
+            
+            if 'stormshield' in device_name_lower:
+                return 'Stormshield'
+            elif 'wifi' in device_name_lower or 'borne' in device_name_lower:
+                return 'Borne WiFi'
+            elif 'switch' in device_name_lower:
+                if 'principal' in device_name_lower:
+                    return 'Switch Principal'
+                elif 'secondaire' in device_name_lower:
+                    return 'Switch Secondaire'
+                else:
+                    return 'Switch Principal'
+            elif 'active directory' in device_name_lower or 'ad' in device_name_lower:
+                return 'Serveur AD'
+            elif 'serveur-ia' in device_name_lower or 'ia' in device_name_lower:
+                return 'Serveur IA'
+        
+        # Dernier recours
         return 'Autres'
     
-    def get_message_hash(self, message):
-        """
-        🔥 HASH DU MESSAGE pour détecter les messages IDENTIQUES
-        On normalise pour regrouper les messages similaires
-        """
-        # Normaliser: retirer IPs, nombres, timestamps
-        normalized = message.lower()
-        
-        # Retirer IPs
-        normalized = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', 'IP', normalized)
-        
-        # Retirer nombres (sauf Event IDs importants)
-        normalized = re.sub(r'\b\d{5,}\b', 'NUM', normalized)
-        
-        # Retirer timestamps
-        normalized = re.sub(r'\d{4}-\d{2}-\d{2}', 'DATE', normalized)
-        normalized = re.sub(r'\d{2}:\d{2}:\d{2}', 'TIME', normalized)
-        
-        # Prendre les 200 premiers caractères pour le hash
-        normalized = normalized[:200]
-        
-        # Créer hash
-        return hashlib.md5(normalized.encode()).hexdigest()[:8]
-    
     def get_ticket_key(self, event):
-        """
-        🔥 CLÉ DE REGROUPEMENT INTELLIGENTE:
-        Catégorie + IP + Hash du message + Date
-        
-        Si 2 messages ont le MÊME hash → MÊME ticket (mis à jour)
-        Si 2 messages ont un hash DIFFÉRENT → 2 tickets différents
-        """
-        category = self.detect_category(event)
-        
-        # Extraire l'IP
-        ip = event.get('_device_ip', event.get('computer', 'unknown'))
-        ip_match = re.search(r'(\d+\.\d+\.\d+\.\d+)', ip)
-        ip_clean = ip_match.group(1).replace('.', '_') if ip_match else 'unknown'
-        
-        # Hash du message
+        """Clé unique pour identifier un ticket"""
+        device = self.detect_device_from_source(event)
         message = event.get('message', '')
-        msg_hash = self.get_message_hash(message)
-        
-        # Clé unique
+        msg_hash = hashlib.md5(message[:200].encode()).hexdigest()[:12]
         today = date.today().isoformat()
-        key = f"{category}_{ip_clean}_{msg_hash}_{today}"
-        
-        return key
+        return f"{device}_{msg_hash}_{today}"
     
     def load_index(self):
         """Charge l'index des tickets"""
@@ -165,8 +260,7 @@ class TicketManager:
                     self.ticket_index = json.load(f)
             else:
                 self.ticket_index = {}
-        except Exception as e:
-            print(f"Erreur chargement index: {e}")
+        except:
             self.ticket_index = {}
     
     def save_index(self):
@@ -174,226 +268,178 @@ class TicketManager:
         try:
             with open(self.ticket_index_file, 'w', encoding='utf-8') as f:
                 json.dump(self.ticket_index, f, indent=2)
-        except Exception as e:
-            print(f"Erreur sauvegarde index: {e}")
+        except:
+            pass
     
     def get_priority_emoji(self, priority):
-        """Retourne l'emoji de priorité"""
+        """Emoji selon priorité"""
         if priority >= 9:
             return "🔴"
         elif priority >= 7:
             return "🟠"
         elif priority >= 5:
             return "🟡"
-        elif priority >= 3:
-            return "🟢"
         else:
-            return "⚪"
+            return "🟢"
     
     def get_priority_label(self, priority):
-        """Retourne le label de priorité"""
+        """Label selon priorité"""
         emoji = self.get_priority_emoji(priority)
-        if priority == 10:
-            return f"{emoji} CRITIQUE 10/10"
-        elif priority == 9:
-            return f"{emoji} CRITIQUE 9/10"
-        elif priority == 8:
-            return f"🟠 HAUTE 8/10"
-        elif priority == 7:
-            return f"🟠 HAUTE 7/10"
-        elif priority == 6:
-            return f"🟡 MOYENNE 6/10"
-        elif priority == 5:
-            return f"🟡 MOYENNE 5/10"
-        elif priority == 4:
-            return f"🟢 BASSE 4/10"
-        elif priority == 3:
-            return f"🟢 BASSE 3/10"
-        elif priority == 2:
-            return f"🔵 INFO 2/10"
-        else:
-            return f"⚪ MINIMAL 1/10"
+        labels = {
+            10: f"{emoji} CRITIQUE 10/10", 
+            9: f"{emoji} CRITIQUE 9/10",
+            8: f"🟠 HAUTE 8/10", 
+            7: f"🟠 HAUTE 7/10",
+            6: f"🟡 MOYENNE 6/10", 
+            5: f"🟡 MOYENNE 5/10",
+            4: f"🟢 BASSE 4/10",
+        }
+        return labels.get(priority, f"🟢 BASSE {priority}/10")
     
     def find_existing_ticket(self, event):
-        """
-        🔥 RECHERCHE UN TICKET EXISTANT
-        Basé sur la clé intelligente (IP + hash message + date)
-        """
+        """Trouve un ticket existant"""
         ticket_key = self.get_ticket_key(event)
-        
         if ticket_key in self.ticket_index:
             ticket_path = self.ticket_index[ticket_key]
             if os.path.exists(ticket_path):
                 return ticket_path
-        
         return None
     
     def create_or_update_ticket(self, event, analysis, web_links, log_callback=None):
-        """Crée ou met à jour un ticket"""
+        """
+        🔥 Crée ou met à jour un ticket
+        ✅ CORRECTION : Retourne TOUJOURS (success: bool, is_new: bool)
+        """
+        # 🔥 VÉRIFIER SI DOUBLON RÉCENT (< 30 min)
+        is_dup, time_diff = self.is_duplicate_within_30min(event)
+        
+        if is_dup:
+            if log_callback:
+                log_callback(f"  📄 Doublon récent ({time_diff:.0f} min), ticket ignoré")
+            return False, False  # ✅ Pas de ticket créé, pas nouveau
+        
+        # Chercher ticket existant
         existing_ticket = self.find_existing_ticket(event)
         
         if existing_ticket:
             if log_callback:
-                log_callback(f"  📝 Ticket existant trouvé → Mise à jour")
+                log_callback(f"  📝 Mise à jour ticket existant")
             self.stats_updated += 1
-            return self.update_existing_ticket(existing_ticket, event, log_callback)
+            success = self.update_existing_ticket(existing_ticket, event, log_callback)
+            
+            # Marquer comme récent
+            if success:
+                self.mark_ticket_recent(event)
+            
+            return success, False  # ✅ Succès mais pas nouveau
         else:
             if log_callback:
-                log_callback(f"  ✨ Nouvelle erreur → Création d'un ticket")
+                log_callback(f"  ✨ Création nouveau ticket")
             self.stats_created += 1
-            return self.create_new_ticket(event, analysis, web_links, log_callback)
+            ticket_path = self.create_new_ticket(event, analysis, web_links, log_callback)
+            success = ticket_path is not None
+            
+            # Marquer comme récent
+            if success:
+                self.mark_ticket_recent(event)
+            
+            return success, True  # ✅ Succès et nouveau
     
     def create_new_ticket(self, event, analysis, web_links, log_callback=None):
         """Crée un nouveau ticket"""
         try:
-            category = self.detect_category(event)
-            category_info = DEVICE_CATEGORIES.get(category, {'icon': '❓', 'priority_boost': 0})
+            device = self.detect_device_from_source(event)
+            device_path = os.path.join(self.output_dir, device)
+            os.makedirs(device_path, exist_ok=True)
             
-            # Extraire IP
-            ip = event.get('_device_ip', event.get('computer', 'unknown'))
-            ip_match = re.search(r'(\d+\.\d+\.\d+\.\d+)', ip)
-            ip_clean = ip_match.group(1).replace('.', '_') if ip_match else 'unknown'
+            error_type = f"Event_{event.get('event_id', 0)}"
+            error_type_path = os.path.join(device_path, error_type)
+            os.makedirs(error_type_path, exist_ok=True)
             
-            # Structure: Catégorie/IP_xxx_xxx_xxx_xxx/
-            category_dir = os.path.join(self.output_dir, category)
-            ip_dir = os.path.join(category_dir, f"IP_{ip_clean}")
-            os.makedirs(ip_dir, exist_ok=True)
-            
-            # Hash du message
-            msg_hash = self.get_message_hash(event.get('message', ''))
-            
-            # Nom du fichier
+            msg_hash = hashlib.md5(event.get('message', '')[:200].encode()).hexdigest()[:12]
             today = date.today().isoformat()
-            ticket_file = os.path.join(
-                ip_dir,
-                f"ticket_{today}_{msg_hash}.txt"
-            )
+            ticket_file = os.path.join(error_type_path, f"ticket_{today}_{msg_hash}.txt")
             
-            # Priorité
             priority = event.get('_priority', 5)
-            if category in MONITORED_DEVICES:
-                priority += MONITORED_DEVICES[category].get('priority_boost', 0)
-            priority = min(priority, 10)
-            
             priority_label = self.get_priority_label(priority)
             priority_emoji = self.get_priority_emoji(priority)
+            severity = event.get('_severity', 'unknown')
             
-            # Severity
-            severity = event.get('_severity', event.get('severity', 'unknown'))
-            
-            # Section web
             web_section = ""
             if web_links:
                 web_section = "\n🌐 RESSOURCES WEB:\n"
                 for i, link in enumerate(web_links, 1):
                     web_section += f"  [{i}] {link}\n"
             
-            # Statut
             if priority >= 9:
-                status = "🔴 CRITIQUE - ACTION IMMÉDIATE REQUISE"
+                status = "🔴 CRITIQUE - ACTION IMMÉDIATE"
             elif priority >= 7:
-                status = "🟠 HAUTE - ACTION RAPIDE RECOMMANDÉE"
-            elif priority >= 5:
-                status = "🟡 MOYENNE - SURVEILLANCE NÉCESSAIRE"
+                status = "🟠 HAUTE - ACTION RAPIDE"
             else:
-                status = "🟢 BASSE - INFORMATION"
+                status = "🟡 SURVEILLANCE"
             
-            # IP affichée
-            ip_display = ip_match.group(1) if ip_match else ip
+            if event.get('_is_syslog'):
+                device_name = event.get('_device_name', device)
+                device_ip = event.get('_device_ip', 'N/A')
+                device_type = event.get('_device_type', 'unknown').upper()
+                
+                source_display = f"{device_name} ({device_ip})"
+                type_display = f"Syslog - {device_type}"
+            else:
+                source_display = event.get('source', 'Unknown')
+                type_display = "Windows Event"
             
-            content = f"""╔═══════════════════════════════════════════════════════════╗
-║     {category_info['icon']} {category.upper()} - {priority_emoji} {priority_label}     ║
-╚═══════════════════════════════════════════════════════════╝
+            content = f"""╔═══════════════════════════════════╗
+║  {device.upper()} - {priority_emoji} {priority_label}  ║
+╚═══════════════════════════════════╝
 
-📅 CRÉÉ LE: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+📅 CRÉÉ: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 📊 OCCURRENCES: 1
 🎯 PRIORITÉ: {priority_label}
 📌 STATUT: {status}
-🏷️ CATÉGORIE: {category_info['icon']} {category}
+🏷️ APPAREIL: {device}
+📂 TYPE: {error_type}
 🔢 SEVERITY: {severity.upper()}
 
-───────────────────────────────────────────────────────────
+────────────────────────────────────────────────────
 
-📊 INFORMATIONS TECHNIQUES:
-  • Source: {event['source']}
-  • IP/Appareil: {ip_display}
-  • Première détection: {event['time_generated']}
+📊 INFORMATIONS:
+  • Source: {source_display}
+  • Type: {type_display}
   • Event ID: {event['event_id']}
-  • Type: {event['event_type']}
+  • Catégorie: {event['event_type']}
+  • Détection: {event['time_generated']}
 
-───────────────────────────────────────────────────────────
+────────────────────────────────────────────────────
 
-📄 MESSAGE D'ERREUR:
-{event['message'][:500]}...
+📄 MESSAGE:
+{event['message'][:500]}{'...' if len(event['message']) > 500 else ''}
 
-───────────────────────────────────────────────────────────
+────────────────────────────────────────────────────
 
-📜 HISTORIQUE DES OCCURRENCES:
-
-[1] {event['time_generated']}
-    Message: {event['message'][:200]}...
-
-───────────────────────────────────────────────────────────
-
-🤖 ANALYSE & SOLUTION:
+🤖 ANALYSE:
 {analysis}
 {web_section}
-───────────────────────────────────────────────────────────
+────────────────────────────────────────────────────
 
-📋 ACTIONS RECOMMANDÉES:
-"""
-            
-            if priority >= 9:
-                content += """  1. ⚠️ BLOQUER IMMÉDIATEMENT l'accès si nécessaire
-  2. 🔍 INVESTIGUER en urgence la source
-  3. 📞 ALERTER l'équipe de sécurité
-  4. 📋 DOCUMENTER tous les détails
-  5. 🛡️ APPLIQUER les correctifs de sécurité
-"""
-            elif priority >= 7:
-                content += """  1. 🔍 ANALYSER rapidement la situation
-  2. 🛠️ APPLIQUER les solutions proposées
-  3. 📊 SURVEILLER l'évolution
-  4. 📝 DOCUMENTER les actions prises
-"""
-            elif priority >= 5:
-                content += """  1. 📋 PLANIFIER une intervention
-  2. 🔍 VÉRIFIER si le problème persiste
-  3. 🛠️ APPLIQUER les correctifs recommandés
-"""
-            else:
-                content += """  1. 📊 MONITORER la situation
-  2. 📝 NOTER pour référence future
-  3. ✅ APPLIQUER si temps disponible
-"""
-            
-            content += f"""
-───────────────────────────────────────────────────────────
-
-📌 STATUT ACTUEL: NOUVEAU
-🔔 NÉCESSITE ACTION: {"OUI - URGENT" if priority >= 7 else "OUI" if priority >= 5 else "SURVEILLANCE"}
-⏰ DERNIÈRE MISE À JOUR: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-📈 TENDANCE: NOUVELLE DÉTECTION
-
-═══════════════════════════════════════════════════════════
+⏰ MAJ: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
             
             with open(ticket_file, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            # Indexer
             ticket_key = self.get_ticket_key(event)
             self.ticket_index[ticket_key] = ticket_file
             self.save_index()
             
             if log_callback:
-                log_callback(f"  ✅ Ticket créé: {category}/IP_{ip_clean}/{os.path.basename(ticket_file)}")
+                log_callback(f"  ✅ {device}/{error_type}")
             
             return ticket_file
             
         except Exception as e:
             if log_callback:
-                log_callback(f"  ❌ Erreur création ticket: {e}")
+                log_callback(f"  ❌ Erreur création: {e}", "error")
             return None
     
     def update_existing_ticket(self, ticket_path, event, log_callback=None):
@@ -402,65 +448,28 @@ class TicketManager:
             with open(ticket_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Incrémenter occurrences
             occurrence_match = re.search(r'📊 OCCURRENCES: (\d+)', content)
             current_count = int(occurrence_match.group(1)) if occurrence_match else 1
             new_count = current_count + 1
             
             content = re.sub(
-                r'📊 OCCURRENCES: \d+',
-                f'📊 OCCURRENCES: {new_count}',
+                r'📊 OCCURRENCES: \d+', 
+                f'📊 OCCURRENCES: {new_count}', 
                 content
             )
             
-            # Ajouter dans historique
-            new_occurrence = f"\n[{new_count}] {event['time_generated']}\n    Message: {event['message'][:200]}...\n"
-            
-            history_marker = "📜 HISTORIQUE DES OCCURRENCES:"
-            if history_marker in content:
-                parts = content.split("───────────────────────────────────────────────────────────")
-                
-                for i, part in enumerate(parts):
-                    if history_marker in part:
-                        parts[i] = part + new_occurrence
-                        break
-                
-                content = "───────────────────────────────────────────────────────────".join(parts)
-            
-            # MAJ heure
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            content = re.sub(
-                r'⏰ DERNIÈRE MISE À JOUR: .+',
-                f'⏰ DERNIÈRE MISE À JOUR: {now}',
-                content
-            )
-            
-            # MAJ tendance
-            if new_count >= 10:
-                trend = "EN AUGMENTATION RAPIDE ⚠️"
-            elif new_count >= 5:
-                trend = "EN AUGMENTATION"
-            else:
-                trend = "STABLE"
-            
-            content = re.sub(
-                r'📈 TENDANCE: .+',
-                f'📈 TENDANCE: {trend} ({new_count} occurrences)',
-                content
-            )
+            content = re.sub(r'⏰ MAJ: .+', f'⏰ MAJ: {now}', content)
             
             with open(ticket_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            if log_callback:
-                log_callback(f"  📝 Ticket mis à jour: {new_count} occurrence(s)")
-            
-            return ticket_path
+            return True
             
         except Exception as e:
             if log_callback:
-                log_callback(f"  ❌ Erreur mise à jour ticket: {e}")
-            return None
+                log_callback(f"  ❌ Erreur MAJ: {e}", "error")
+            return False
     
     def cleanup_old_tickets(self, days=CLEANUP_DAYS):
         """Nettoie les vieux tickets"""
@@ -468,37 +477,34 @@ class TicketManager:
             cutoff_date = datetime.now() - timedelta(days=days)
             cleaned = 0
             
-            for category in DEVICE_CATEGORIES.keys():
-                category_path = os.path.join(self.output_dir, category)
-                if not os.path.exists(category_path):
+            for device_folder in os.listdir(self.output_dir):
+                device_path = os.path.join(self.output_dir, device_folder)
+                if not os.path.isdir(device_path) or device_folder.startswith('.'):
                     continue
                 
-                for ip_folder in os.listdir(category_path):
-                    ip_path = os.path.join(category_path, ip_folder)
-                    
-                    if not os.path.isdir(ip_path):
+                for error_type_folder in os.listdir(device_path):
+                    error_type_path = os.path.join(device_path, error_type_folder)
+                    if not os.path.isdir(error_type_path):
                         continue
                     
-                    for ticket_file in os.listdir(ip_path):
+                    for ticket_file in os.listdir(error_type_path):
                         if not ticket_file.startswith('ticket_'):
                             continue
                         
-                        ticket_path = os.path.join(ip_path, ticket_file)
-                        
+                        ticket_path = os.path.join(error_type_path, ticket_file)
                         if not os.path.isfile(ticket_path):
                             continue
                         
                         file_date = datetime.fromtimestamp(os.path.getmtime(ticket_path))
-                        
                         if file_date < cutoff_date:
                             os.remove(ticket_path)
                             cleaned += 1
                     
-                    if not os.listdir(ip_path):
-                        os.rmdir(ip_path)
+                    if not os.listdir(error_type_path):
+                        os.rmdir(error_type_path)
             
             self.ticket_index = {
-                k: v for k, v in self.ticket_index.items()
+                k: v for k, v in self.ticket_index.items() 
                 if os.path.exists(v)
             }
             self.save_index()
@@ -518,6 +524,6 @@ class TicketManager:
         }
     
     def reset_stats(self):
-        """Réinitialise les statistiques"""
+        """Réinitialise les stats"""
         self.stats_created = 0
         self.stats_updated = 0

@@ -1,0 +1,72 @@
+╔═══════════════════════════════════╗
+║  SERVEUR AD - 🟠 🟠 HAUTE 7/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-15 15:00:59
+📊 OCCURRENCES: 1
+🎯 PRIORITÉ: 🟠 HAUTE 7/10
+📌 STATUT: 🟠 HAUTE - ACTION RAPIDE
+🏷️ APPAREIL: Serveur AD
+📂 TYPE: Event_114
+🔢 SEVERITY: UNKNOWN
+
+────────────────────────────────────────────────────
+
+📊 INFORMATIONS:
+  • Source: Microsoft-Windows-TaskScheduler
+  • Type: Windows Event
+  • Event ID: 114
+  • Catégorie: WARNING
+  • Détection: Thu Jan 15 07:39:28 2026
+
+────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 114 ) in Source ( 'Microsoft-Windows-TaskScheduler' ) could not be found. It contains the following insertion string(s):'\\Microsoft\\Windows\\Data Integrity Scan\\Data Integrity Check And Scan, {a7ca2bea-1626-4f32-ac27-fe8c7bdf58f7}'.>
+
+────────────────────────────────────────────────────
+
+🤖 ANALYSE:
+Analyse de l'erreur :
+
+L'erreur signalée est un avertissement (WARNING) émis par le système Windows Server, spécifiquement par le service TaskScheduler, avec une identifiant d'événement (Event ID) de 114. L'événement indique qu'une description pour cet événement n'a pas pu être trouvée dans les sources disponibles.
+
+L'erreur est généralement liée à un problème de sécurité ou de configuration lié aux tâches de l'application TaskScheduler, qui sont utilisées par le système pour exécuter des tâches automatiques. Dans ce cas précis, l'événement contient une insertion string (un code de référence) qui indique que la description de l'événement a été perturbée.
+
+Impact sur le système :
+
+- L'erreur pourrait avoir un impact limité sur le fonctionnement du système, car elle est classée comme une erreur d'avertissement plutôt qu'une erreur critique. Cependant, cela peut indiquer une vulnérabilité ou un problème de configuration qui doit être résolu pour éviter des problèmes futurs.
+
+Solutions immédiates :
+
+Avant de passer à la résolution complète, il est recommandé de vérifier si l'erreur a déjà été résolue par le système ou si elle nécessite une intervention manuelle. 
+
+En général, les avertissements liés aux tâches du TaskScheduler ne nécessitent pas d'intervention immédiate sauf que la tâche soit en cours d'exécution et vous souhaitez supprimer l'erreur.
+
+Résolution complète :
+
+1. **Arrêter le service TaskScheduler** : Pour éviter les erreurs liées à cette situation, il est possible de arrêter le service TaskScheduler et de vérifier si l'événement se répète après son redémarrage. Vous pouvez arrêter la tâche via la console de gestion des services (système) ou en utilisant les commandes PowerShell.
+
+   ```powershell
+   Stop-Service -Name TaskScheduler
+   ```
+
+2. **Vérification et mise à jour du système** : Assurez-vous que le système est à jour avec les dernières mises à jour de sécurité et d'exploitation pour éviter les vulnérabilités.
+
+3. **Rédaction personnalisée de la tâche** : Si vous avez créé une tâche personnalisée qui utilise cette référence, il faudra rédiger une nouvelle tâche avec une référence unique ou supprimer la tâche existante si elle n'est plus nécessaire.
+
+4. **Vérification des registres** : Vérifiez les registres pour voir si l'erreur est liée à un problème de configuration ou d'enregistrement.
+
+5. **Mise à jour du logiciel TaskScheduler** : Si la tâche était configurée avec le logiciel TaskScheduler, assurez-vous qu'il est à jour et que toute mise à jour apporte des améliorations de sécurité.
+
+Prévention :
+
+- **Surveillance continue** : Assurez-vous de surveiller régulièrement les événements système pour détecter tout avertissement ou erreur d'importance.
+  
+- **Mises à jour régulières** : Assurez-vous que tous vos logiciels et systèmes sont à jour avec les dernières mises à jour de sécurité.
+
+- **Gestion des tâches** : Gérez soigneusement vos tâches système, en supprimant celles qui ne sont plus nécessaires ou en configurant des tâches automatiques avec précaution.
+
+────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-15 15:00:59

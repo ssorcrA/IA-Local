@@ -1,15 +1,17 @@
 """
-Application principale - VERSION CORRIGÉE
-Fichier : main.py - PARTIE 1/2
-CORRECTIFS:
-- Passe ticket_manager aux threads pour stats
-- Affiche vraies statistiques
-- Détection correcte des appareils
+Application principale - VERSION CORRIGÉE COMPLÈTE
+Fichier : main.py - REMPLACER ENTIÈREMENT
+✅ CORRECTIFS:
+- ✅ analyze_and_create_ticket déballe le tuple (success, is_new)
+- ✅ Retourne toujours un tuple (success, is_new)
+- ✅ Compatible avec monitoring_thread.py et ticket_manager.py
 """
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 import os
 import json
+import threading
+import time
 from datetime import datetime
 
 from config import (
@@ -38,8 +40,11 @@ class UnifiedMonitorGUI:
         self.root.geometry("1400x900")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-        self.monitoring = False
-        self.initial_check_running = False
+        # 🔥 ÉTATS DISTINCTS
+        self.monitoring = False           # Surveillance continue
+        self.quick_check_running = False  # Test 2h en cours
+        self.full_check_running = False   # Analyse 24h en cours
+        
         self.dark_mode = ThemeManager.load_preference()
         self.current_theme = ThemeManager.DARK_THEME if self.dark_mode else ThemeManager.LIGHT_THEME
         self.current_ticket_path = None
@@ -57,23 +62,26 @@ class UnifiedMonitorGUI:
             self.ticket_manager = TicketManager(OUTPUT_DIR)
             self.event_filter = EventFilter(log_callback=self.log_message)
             
+            # 🔥 THREAD DE SURVEILLANCE CONTINUE (10s)
             self.monitor_thread = MonitoringThread(
                 self.log_reader, self.event_filter,
                 self.analyze_and_create_ticket, self.refresh_tickets,
                 POLLING_INTERVAL
             )
-            # 🔥 NOUVEAU: Passer le ticket_manager
             self.monitor_thread.set_ai_analyzer(self.ai_analyzer)
             self.monitor_thread.set_ticket_manager(self.ticket_manager)
             
-            self.initial_check_thread = InitialCheckThread(
+            # 🔥 THREAD POUR TEST 2H (séparé)
+            self.quick_check_thread = None
+            
+            # 🔥 THREAD POUR ANALYSE 24H (séparé)
+            self.full_check_thread = InitialCheckThread(
                 self.log_reader, self.event_filter,
-                self.analyze_and_create_ticket, self.refresh_tickets,
+                self.analyze_and_create_ticket, self.load_tickets,
                 INITIAL_CHECK_HOURS
             )
-            # 🔥 NOUVEAU: Passer le ticket_manager
-            self.initial_check_thread.set_ai_analyzer(self.ai_analyzer)
-            self.initial_check_thread.set_ticket_manager(self.ticket_manager)
+            self.full_check_thread.set_ai_analyzer(self.ai_analyzer)
+            self.full_check_thread.set_ticket_manager(self.ticket_manager)
             
             self.ticket_ops = TicketOperations(
                 self.ticket_tree_view, OUTPUT_DIR, self.detail_text,
@@ -82,8 +90,6 @@ class UnifiedMonitorGUI:
             
             self.load_history()
             self.check_requirements()
-            
-            # Démarrer le thread de vérification périodique des tickets
             self.start_ticket_refresh_thread()
             
         except Exception as e:
@@ -91,15 +97,10 @@ class UnifiedMonitorGUI:
     
     def start_ticket_refresh_thread(self):
         """Thread qui rafraîchit les tickets toutes les 5 minutes"""
-        import threading
-        import time
-        
         def refresh_loop():
             while True:
-                time.sleep(300)  # 5 minutes
-                
+                time.sleep(300)
                 try:
-                    # Rafraîchir la vue (dans le thread principal)
                     self.root.after(0, self.silent_refresh_tickets)
                 except:
                     pass
@@ -154,12 +155,14 @@ class UnifiedMonitorGUI:
         
         self.status_bar = StatusBar(self.root, self.current_theme)
         
+        # 🔥 CALLBACKS CORRIGÉS
         self.control_panel = ControlPanel(self.root, {
-            'start': self.start_monitoring,
-            'stop': self.stop_monitoring,
-            'refresh': self.refresh_tickets,
-            'initial_check': self.initial_check,
-            'stop_check': self.stop_initial_check,
+            'start': self.start_monitoring,      # ▶ Surveillance continue
+            'stop': self.stop_monitoring,        # ⏸ Arrêter
+            'refresh': self.refresh_tickets,     # 🔄 Actualiser (pas d'analyse)
+            'quick_check': self.quick_check,     # 🔍 Test 2h
+            'initial_check': self.initial_check, # 📅 Analyse 24h
+            'stop_check': self.stop_any_check,   # ⏹ Arrêter vérif
             'cleanup': self.cleanup_old_tickets
         })
         
@@ -216,11 +219,6 @@ class UnifiedMonitorGUI:
             cursor='hand2'
         )
         self.theme_btn.pack(side='right')
-        """
-Application principale - VERSION CORRIGÉE
-Fichier : main.py - PARTIE 2/2 (continuation)
-À combiner avec la partie 1
-"""
     
     def log_message(self, message, tag="info"):
         self.console_manager.log(message, tag)
@@ -285,18 +283,23 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         theme_icon = "🌙" if not self.dark_mode else "☀️"
         self.theme_btn.config(text=f"{theme_icon} Thème")
     
+    # 🔥 CORRECTIF 1 : SURVEILLANCE CONTINUE
     def start_monitoring(self):
-        if self.initial_check_running:
-            messagebox.showwarning("Analyse en cours", "Attendez la fin de l'analyse 24h")
+        """▶ Surveillance continue toutes les 10 secondes"""
+        # Bloquer si une analyse est en cours
+        if self.quick_check_running or self.full_check_running:
+            messagebox.showwarning("Analyse en cours", 
+                "Attendez la fin de l'analyse en cours avant de démarrer la surveillance")
             return
         
         self.monitoring = True
         self.control_panel.set_monitoring_state(True)
         self.status_bar.update_status("🟢 Surveillance active", '#27ae60')
         
-        self.log_message(f"\n🚀 Surveillance multi-sources démarrée (intervalle: {POLLING_INTERVAL}s)", "success")
+        self.log_message(f"\n🚀 SURVEILLANCE CONTINUE DÉMARRÉE", "success")
+        self.log_message(f"   Intervalle: {POLLING_INTERVAL} secondes", "success")
+        self.log_message(f"   Appuyez sur '⏸ Arrêter' pour stopper\n", "info")
         
-        # Passer l'analyseur IA et le ticket_manager au thread
         self.monitor_thread.start(
             self.log_message,
             lambda t: self.status_bar.update_last_check(t),
@@ -304,9 +307,8 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         )
     
     def stop_monitoring(self):
+        """⏸ Arrêter la surveillance continue"""
         self.log_message("\n🛑 ARRÊT DE LA SURVEILLANCE...", "warning")
-        self.log_message("   → Arrêt des threads en cours", "warning")
-        self.log_message("   → Interruption des analyses IA", "warning")
         
         self.monitoring = False
         self.monitor_thread.stop()
@@ -317,33 +319,122 @@ Fichier : main.py - PARTIE 2/2 (continuation)
         self.save_history()
         self.log_message("✅ Surveillance arrêtée proprement\n", "success")
     
-    def initial_check(self):
-        if self.initial_check_running:
+    # 🔥 CORRECTIF 2 : TEST RAPIDE 2H
+    def quick_check(self):
+        """🔍 Test rapide des 2 dernières heures"""
+        # Bloquer si autre opération en cours
+        if self.monitoring:
+            messagebox.showwarning("Surveillance active", 
+                "Arrêtez d'abord la surveillance continue")
+            return
+        
+        if self.quick_check_running or self.full_check_running:
             messagebox.showwarning("En cours", "Une vérification est déjà en cours")
             return
         
-        if self.monitoring:
-            messagebox.showwarning("Surveillance active", "Arrêtez d'abord la surveillance continue")
-            return
+        hours = 2
         
         self.log_message("\n" + "=" * 80, "warning")
-        self.log_message("📅 ANALYSE MULTI-SOURCES - Fenêtre de 24 heures", "warning")
+        self.log_message(f"🔍 TEST RAPIDE - Fenêtre de {hours} heures", "warning")
         self.log_message("=" * 80, "warning")
         
-        self.initial_check_running = True
+        self.quick_check_running = True
         self.control_panel.set_check_state(True)
         self.control_panel.start_btn.config(state='disabled')
         
-        # Passer l'analyseur IA et le ticket_manager au thread
-        self.initial_check_thread.start(self.log_message, self.ai_analyzer)
-    
-    def stop_initial_check(self):
-        self.log_message("\n🛑 ARRÊT DE LA VÉRIFICATION...", "warning")
-        self.log_message("   → Arrêt des threads en cours", "warning")
-        self.log_message("   → Interruption des analyses IA", "warning")
+        # Créer un thread dédié pour le test 2h
+        self.quick_check_thread = InitialCheckThread(
+            self.log_reader, self.event_filter,
+            self.analyze_and_create_ticket, self.load_tickets,
+            hours  # 2 heures
+        )
+        self.quick_check_thread.set_ai_analyzer(self.ai_analyzer)
+        self.quick_check_thread.set_ticket_manager(self.ticket_manager)
         
-        self.initial_check_running = False
-        self.initial_check_thread.stop()
+        self.quick_check_thread.start(self.log_message, self.ai_analyzer)
+        
+        # Attendre la fin
+        def wait_for_completion():
+            while self.quick_check_thread.running:
+                time.sleep(1)
+            self.root.after(0, self._on_quick_check_complete)
+        
+        wait_thread = threading.Thread(target=wait_for_completion, daemon=True)
+        wait_thread.start()
+    
+    def _on_quick_check_complete(self):
+        """Appelé quand le test 2h est terminé"""
+        self.quick_check_running = False
+        self.control_panel.set_check_state(False)
+        self.control_panel.start_btn.config(state='normal')
+        self.log_message("\n✅ Test rapide terminé\n", "success")
+    
+    # 🔥 CORRECTIF 3 : ANALYSE COMPLÈTE 24H
+    def initial_check(self):
+        """📅 Analyse complète des 24 dernières heures"""
+        # Bloquer si autre opération en cours
+        if self.monitoring:
+            messagebox.showwarning("Surveillance active", 
+                "Arrêtez d'abord la surveillance continue")
+            return
+        
+        if self.quick_check_running or self.full_check_running:
+            messagebox.showwarning("En cours", "Une vérification est déjà en cours")
+            return
+        
+        # Confirmation
+        response = messagebox.askyesno(
+            "Analyse 24h", 
+            "⚠️ ATTENTION ⚠️\n\n"
+            "Cette analyse va scanner les 24 dernières heures.\n"
+            "Cela peut générer BEAUCOUP d'événements à traiter.\n\n"
+            "Recommandation : Utilisez d'abord '🔍 Test 2h'\n\n"
+            "Voulez-vous continuer ?",
+            icon='warning'
+        )
+        
+        if not response:
+            return
+        
+        self.log_message("\n" + "=" * 80, "warning")
+        self.log_message(f"📅 ANALYSE COMPLÈTE - Fenêtre de 24 heures", "warning")
+        self.log_message("=" * 80, "warning")
+        
+        self.full_check_running = True
+        self.control_panel.set_check_state(True)
+        self.control_panel.start_btn.config(state='disabled')
+        
+        # Utiliser le thread dédié 24h
+        self.full_check_thread.start(self.log_message, self.ai_analyzer)
+        
+        # Attendre la fin
+        def wait_for_completion():
+            while self.full_check_thread.running:
+                time.sleep(1)
+            self.root.after(0, self._on_full_check_complete)
+        
+        wait_thread = threading.Thread(target=wait_for_completion, daemon=True)
+        wait_thread.start()
+    
+    def _on_full_check_complete(self):
+        """Appelé quand l'analyse 24h est terminée"""
+        self.full_check_running = False
+        self.control_panel.set_check_state(False)
+        self.control_panel.start_btn.config(state='normal')
+        self.log_message("\n✅ Analyse complète terminée\n", "success")
+    
+    # 🔥 CORRECTIF 4 : ARRÊT UNIFIÉ
+    def stop_any_check(self):
+        """⏹ Arrête n'importe quelle vérification en cours"""
+        self.log_message("\n🛑 ARRÊT DE LA VÉRIFICATION...", "warning")
+        
+        if self.quick_check_running and self.quick_check_thread:
+            self.quick_check_thread.stop()
+            self.quick_check_running = False
+        
+        if self.full_check_running:
+            self.full_check_thread.stop()
+            self.full_check_running = False
         
         self.control_panel.set_check_state(False)
         self.control_panel.start_btn.config(state='normal')
@@ -352,63 +443,67 @@ Fichier : main.py - PARTIE 2/2 (continuation)
     
     def analyze_and_create_ticket(self, event):
         """
-        🔥 VERSION CORRIGÉE: 
-        - Crée ou met à jour le ticket
-        - Les stats sont gérées automatiquement dans ticket_manager
+        🔥 CORRECTION CRITIQUE : Déballe correctement le tuple (success, is_new)
+        Analyse un événement et crée/met à jour un ticket
+        ✅ Retourne TOUJOURS (success: bool, is_new: bool)
         """
         try:
-            # Vérifier si arrêt demandé AVANT de commencer
-            if not self.monitoring and not self.initial_check_running:
+            # Vérifier si on doit continuer
+            if not self.monitoring and not self.quick_check_running and not self.full_check_running:
                 self.log_message("  🛑 Analyse annulée (arrêt demandé)", "warning")
-                return False
+                return False, False  # ✅ Retour tuple
             
-            # Vérifier si l'IA a été arrêtée
             if self.ai_analyzer.stop_requested:
                 self.log_message("  🛑 Analyse IA annulée", "warning")
-                return False
+                return False, False  # ✅ Retour tuple
             
+            # Recherche web
             web_results = self.web_searcher.search(event)
             
-            # Re-vérifier avant l'analyse IA
-            if not self.monitoring and not self.initial_check_running:
-                return False
+            if not self.monitoring and not self.quick_check_running and not self.full_check_running:
+                return False, False  # ✅ Retour tuple
             
+            # Analyse IA
             analysis = self.ai_analyzer.analyze(event, web_results)
             
-            # Vérifier après l'analyse IA
-            if not self.monitoring and not self.initial_check_running:
-                return False
+            if not self.monitoring and not self.quick_check_running and not self.full_check_running:
+                return False, False  # ✅ Retour tuple
             
             if self.ai_analyzer.stop_requested:
-                return False
+                return False, False  # ✅ Retour tuple
             
+            # Extraire liens web
             web_links = []
             if web_results:
                 import re
                 for match in re.finditer(r'🔗 (https?://[^\s]+)', web_results):
                     web_links.append(match.group(1))
             
-            # 🔥 Le ticket_manager gère automatiquement les stats
-            ticket_path = self.ticket_manager.create_or_update_ticket(
+            # 🔥 CORRECTION CRITIQUE : Déballer le tuple (success, is_new)
+            success, is_new = self.ticket_manager.create_or_update_ticket(
                 event, analysis, web_links, 
                 lambda msg: self.log_message(msg, "success")
             )
             
-            if ticket_path:
-                self.log_message(f"  📄 Ticket: {os.path.basename(ticket_path)}", "success")
+            if success:
+                from datetime import date
+                ticket_name = f"ticket_{date.today().isoformat()}_xxx.txt"
+                self.log_message(f"  📄 Ticket: {ticket_name}", "success")
             
-            return True
+            # ✅ RETOUR CORRECT : Toujours un tuple
+            return success, is_new
             
         except Exception as e:
             self.log_message(f"  ❌ Erreur lors de l'analyse: {e}", "error")
-            return False
+            return False, False  # ✅ Toujours retourner un tuple
     
     def load_tickets(self):
         total, today = self.ticket_tree_view.load_tickets()
         self.footer.update_stats(total, today)
-        self.log_message(f"✅ {total} ticket(s) chargé(s)", "success")
+        self.log_message(f"✅ {total} ticket(s) chargés", "success")
     
     def refresh_tickets(self):
+        """🔄 Actualise SEULEMENT la liste (pas d'analyse)"""
         self.log_message("🔄 Actualisation de la base de données...", "info")
         self.load_tickets()
         self.log_message("✅ Base de données actualisée\n", "success")
@@ -441,13 +536,14 @@ Fichier : main.py - PARTIE 2/2 (continuation)
                 self.log_message("✅ Aucun incident à supprimer", "info")
     
     def on_closing(self):
-        if self.monitoring or self.initial_check_running:
+        if self.monitoring or self.quick_check_running or self.full_check_running:
             if messagebox.askokcancel("Fermeture", "Des opérations sont en cours. Voulez-vous vraiment quitter ?"):
-                # Arrêter proprement
                 if self.monitoring:
                     self.monitor_thread.stop()
-                if self.initial_check_running:
-                    self.initial_check_thread.stop()
+                if self.quick_check_running and self.quick_check_thread:
+                    self.quick_check_thread.stop()
+                if self.full_check_running:
+                    self.full_check_thread.stop()
                 
                 self.save_history()
                 self.root.destroy()

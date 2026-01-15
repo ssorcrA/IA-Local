@@ -1,0 +1,56 @@
+╔═══════════════════════════════════╗
+║  SERVEUR AD - 🟡 🟡 MOYENNE 6/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-15 14:54:24
+📊 OCCURRENCES: 1
+🎯 PRIORITÉ: 🟡 MOYENNE 6/10
+📌 STATUT: 🟡 SURVEILLANCE
+🏷️ APPAREIL: Serveur AD
+📂 TYPE: Event_1104
+🔢 SEVERITY: UNKNOWN
+
+────────────────────────────────────────────────────
+
+📊 INFORMATIONS:
+  • Source: Microsoft-Windows-AAD
+  • Type: Windows Event
+  • Event ID: 1104
+  • Catégorie: ERROR
+  • Détection: Thu Jan 15 07:30:22 2026
+
+────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 1104 ) in Source ( 'Microsoft-Windows-AAD' ) could not be found. It contains the following insertion string(s):'Plugin initialize, 3221521494'.>
+
+────────────────────────────────────────────────────
+
+🤖 ANALYSE:
+Analyse de l'erreur :
+
+L'erreur reportée est liée au module Microsoft-Windows-AAD, qui est utilisé pour gérer les comptes d'utilisateur et les accès aux ressources dans Azure Active Directory (AAD). L'erreur 1104 indique que la description du événement ne peut pas être trouvée.
+
+Analyse détaillée :
+
+*   **Diagnostiqué** : L'erreur peut être causée par un problème de configuration ou de compatibilité avec le module Microsoft-Windows-AAD.
+*   **Solution immédiate** : Pour résoudre l'erreur, il est recommandé d'exécuter la commande suivante pour obtenir des informations supplémentaires sur l'événement :
+    ```
+    Get-EventLog -Source "Microsoft-Windows-AAD" -FilterHashtable @{
+        EventID = 1104
+    } -ErrorAction SilentlyContinue | Format-List
+    ```
+*   **Résolution complète** : Pour résoudre définitivement l'erreur, il faut vérifier si le module Microsoft-Windows-AAD est installé et configuré correctement sur le serveur Windows Server. Il est recommandé de vérifier les paramètres suivants :
+
+    *   Le module Microsoft-Windows-AAD doit être activé dans le gestionnaire de services.
+    *   Les certificats nécessaires doivent être installés sur le serveur Windows Server.
+    *   Les paramètres de configuration du module doivent être validés.
+*   **Prévention** : Pour éviter la récurrence de l'erreur, il est recommandé de :
+
+    *   Vérifier régulièrement les mises à jour et les patches pour le module Microsoft-Windows-AAD.
+    *   Exécuter des tests de configuration réguliers pour garantir que le module est fonctionnel.
+    *   Utiliser des logs pour surveiller l'état du module et détecter tout problème potentiel.
+
+────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-15 14:54:24

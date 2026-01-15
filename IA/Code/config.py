@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 """
 Configuration OPTIMISÉE - Surveillance Temps Réel + DÉTECTION MAXIMALE
-Fichier : config.py - REMPLACER L'ANCIEN
-CORRECTIFS:
-- Intervalle réduit à 10 secondes
-- Seuil de priorité abaissé à 3 (capture warnings)
-- Détection warnings activée
+Fichier : config.py - VERSION CORRIGÉE ENCODAGE
+✅ CORRECTIFS:
+- Encodage UTF-8 explicite
+- Seuils équilibrés
 """
 import os
 from pathlib import Path
@@ -42,10 +42,8 @@ WEB_SEARCH_ENABLED = True
 WEB_SEARCH_TIMEOUT = 10
 MAX_WEB_RESULTS = 3
 
-# 🔥 SEUIL ABAISSÉ POUR CAPTURER PLUS D'ÉVÉNEMENTS
-# 3 = Capture warnings(6), errors(8), critiques(10)
-# Ignore seulement info(2) et debug(1)
-MIN_PRIORITY_THRESHOLD = 3  # ← ABAISSÉ DE 5 À 3
+# 🔥 SEUIL ÉQUILIBRÉ
+MIN_PRIORITY_THRESHOLD = 5
 ENABLE_ONLINE_SEVERITY_CHECK = True
 
 SMTP_ENABLED = False
@@ -76,7 +74,6 @@ DEVICE_CATEGORIES = {
     'Autres': {'keywords': [], 'icon': '❓', 'priority_boost': 0}
 }
 
-# Event IDs critiques (inchangés)
 CRITICAL_EVENT_IDS = {
     1102: 10, 4719: 10, 4794: 10,
     4765: 9, 7045: 9, 4697: 9,
@@ -151,10 +148,10 @@ def get_ollama_web_url():
 if __name__ == "__main__":
     print(f"Configuration {APP_NAME} v{APP_VERSION}")
     print("=" * 60)
-    print("\n🔥 MODE DÉTECTION MAXIMALE ACTIVÉ")
+    print("\n🔥 MODE DÉTECTION ÉQUILIBRÉE")
     print("=" * 60)
     ensure_directories()
-    print("✔ Répertoires créés")
+    print("✓ Répertoires créés")
     issues = validate_config()
     if issues:
         print("\n⚠️  Problèmes détectés:")
@@ -164,12 +161,7 @@ if __name__ == "__main__":
         print("\n✅ Configuration valide")
     print(f"\n🤖 URL Ollama API: {get_ollama_url()}")
     print(f"🌐 URL Ollama Web: {get_ollama_web_url()}")
-    print(f"\n📊 PARAMÈTRES DÉTECTION MAXIMALE:")
-    print(f"  • Polling: {POLLING_INTERVAL}s (détection rapide)")
-    print(f"  • Seuil priorité: {MIN_PRIORITY_THRESHOLD}/10 (capture warnings + errors)")
+    print(f"\n📊 PARAMÈTRES ÉQUILIBRÉS:")
+    print(f"  • Polling: {POLLING_INTERVAL}s")
+    print(f"  • Seuil priorité: {MIN_PRIORITY_THRESHOLD}/10")
     print(f"  • Check initial: {INITIAL_CHECK_HOURS}h")
-    print(f"\n✅ Détection configurée pour :")
-    print(f"  🔴 Alerts/Critiques (10)")
-    print(f"  🔴 Errors (8)")
-    print(f"  🟡 Warnings (6)")
-    print(f"  ℹ️ Notices importantes (4-5)")
