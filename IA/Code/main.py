@@ -1,10 +1,11 @@
 """
-Application principale - VERSION CORRIGÉE COMPLÈTE
+Application principale - VERSION COMPLÈTE CORRIGÉE
 Fichier : main.py - REMPLACER ENTIÈREMENT
 ✅ CORRECTIFS:
-- ✅ analyze_and_create_ticket déballe le tuple (success, is_new)
-- ✅ Retourne toujours un tuple (success, is_new)
-- ✅ Compatible avec monitoring_thread.py et ticket_manager.py
+- ✅ Import device_detector
+- ✅ Affichage des 6 appareils au démarrage
+- ✅ Surveillance silencieuse
+- ✅ Gestion correcte des tuples (success, is_new)
 """
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
@@ -24,6 +25,7 @@ from web_searcher import WebSearcher
 from ticket_manager import TicketManager
 from event_filter import EventFilter
 from theme_manager import ThemeManager
+from device_detector import DeviceDetector  # 🔥 NOUVEAU
 
 from gui_components import StatusBar, ControlPanel, Footer
 from console_manager import ConsoleManager, AIConsoleManager
@@ -252,10 +254,14 @@ class UnifiedMonitorGUI:
             self.log_message(f"Avertissement: Impossible de sauvegarder l'historique: {e}", "warning")
     
     def check_requirements(self):
+        """🔥 AFFICHE LES 6 APPAREILS SURVEILLÉS"""
         self.log_message("=" * 80, "info")
         self.log_message(f"  {APP_NAME} v{APP_VERSION}", "success")
         self.log_message("  Système de détection des menaces multi-sources avec IA", "info")
         self.log_message("=" * 80, "info")
+        
+        # 🔥 AFFICHER LES 6 APPAREILS SURVEILLÉS
+        self.log_message(DeviceDetector.get_summary(), "info")
         
         issues = validate_config()
         if issues:

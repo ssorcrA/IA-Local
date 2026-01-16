@@ -1,27 +1,40 @@
 """
-Filtre d'événements - BORNE WIFI TRÈS SÉLECTIVE (seuil 9/10)
-Fichier : event_filter.py - VERSION FINALE
-✅ CORRECTIF: Aligné avec syslog_reader.py
-- Borne WiFi : seuil 9 (critiques uniquement)
-- Stormshield : seuil 5 (surveillance normale)
-- Switches : seuil 6 (surveillance normale)
+Filtre d'événements - CLASSIFICATION SYSLOG AUTOMATIQUE
+✅ Stormshield, Borne WiFi, Switches → Marqués comme Syslog
+✅ Détection intelligente
 """
 import re
 from web_searcher import WebSearcher
 
 
 class EventFilter:
-    """Filtre avec Borne WiFi très sélective"""
+    """Filtre avec classification Syslog automatique"""
     
-    # ✅ SEUILS ALIGNÉS - BORNE WIFI CRITIQUE UNIQUEMENT
+    # Seuils ultra-bas
     DEVICE_THRESHOLDS = {
-        'Stormshield': 5,          # ✅ Surveillance normale - warnings + errors
-        'Borne WiFi': 9,           # 🔥 TRÈS SÉLECTIF - Critiques uniquement
-        'Switch Principal': 6,     # ✅ Surveillance normale - erreurs moyennes+
-        'Switch Secondaire': 6,    # ✅ Surveillance normale
-        'Serveur AD': 6,           # ✅ Surveillance normale
-        'Serveur IA': 7,           # Critiques uniquement
-        'Autres': 7,
+        'Stormshield': 3,
+        'Borne WiFi': 9,
+        'Switch Principal': 3,
+        'Switch Secondaire': 3,
+        'Serveur AD': 5,
+        'Serveur IA': 6,
+        'Autres': 6,
+    }
+    
+    # 🔥 APPAREILS SYSLOG (équipements réseau)
+    SYSLOG_DEVICES = {
+        'Stormshield',
+        'Borne WiFi', 
+        'Switch Principal',
+        'Switch Secondaire'
+    }
+    
+    # 🔥 IPs SYSLOG
+    SYSLOG_IPS = {
+        '192.168.10.254',  # Stormshield
+        '192.168.10.11',   # Borne WiFi
+        '192.168.10.15',   # Switch Principal
+        '192.168.10.16'    # Switch Secondaire
     }
     
     CRITICAL_EVENT_IDS = {
@@ -34,29 +47,18 @@ class EventFilter:
     }
     
     CRITICAL_KEYWORDS = {
-        # Intrusions réseau
         'intrusion': 10, 'attack': 10, 'breach': 10, 'hack': 10,
         'exploit': 9, 'malware': 9, 'virus': 9, 'trojan': 9,
-        
-        # Blocages firewall (CRITIQUES pour Stormshield)
         'deny': 8, 'denied': 8, 'drop': 8, 'dropped': 8,
         'block': 8, 'blocked': 8, 'reject': 8, 'rejected': 8,
         'refused': 8, 'forbidden': 8,
-        
-        # Tentatives suspectes
         'unauthorized': 9, 'invalid': 7, 'suspicious': 8,
         'scan': 7, 'probe': 7, 'attempt': 6,
         'anomaly': 8, 'anomalous': 8,
-        
-        # Authentification
         'authentication failed': 9, 'login failed': 8,
         'auth fail': 8, 'brute': 10, 'brute force': 10,
-        
-        # Erreurs système
         'fail': 6, 'failed': 6, 'failure': 6, 'error': 5,
         'timeout': 5, 'corruption': 6, 'fatal': 7,
-        
-        # Trafic malveillant
         'ddos': 10, 'dos': 9, 'flood': 9,
         'syn flood': 10, 'port scan': 9,
     }
@@ -89,57 +91,101 @@ class EventFilter:
         else:
             print(message)
     
+    def classify_event_as_syslog(self, event):
+        """
+        🔥 CLASSIFICATION AUTOMATIQUE SYSLOG
+        Marque un événement comme Syslog si c'est un équipement réseau
+        """
+        # Déjà marqué
+        if event.get('_is_syslog') is not None:
+            return event.get('_is_syslog')
+        
+        # Vérifier par device_name
+        device_name = event.get('_device_name', '')
+        if device_name in self.SYSLOG_DEVICES:
+            event['_is_syslog'] = True
+            return True
+        
+        # Vérifier par device_ip
+        device_ip = event.get('_device_ip', '')
+        if device_ip in self.SYSLOG_IPS:
+            event['_is_syslog'] = True
+            return True
+        
+        # Vérifier par computer
+        computer = event.get('computer', '')
+        if computer in self.SYSLOG_IPS:
+            event['_is_syslog'] = True
+            return True
+        
+        # Vérifier dans source
+        source = event.get('source', '').lower()
+        
+        syslog_keywords = ['stormshield', 'firewall', 'asqd', 'wifi', 'switch', 'borne']
+        
+        if any(kw in source for kw in syslog_keywords):
+            event['_is_syslog'] = True
+            return True
+        
+        # Par défaut : Windows Event
+        event['_is_syslog'] = False
+        return False
+    
     def get_device_from_event(self, event):
         """Détermine l'appareil"""
-        device_ip = event.get('_device_ip', '')
+        if event.get('_device_name'):
+            return event['_device_name']
         
-        if device_ip == '192.168.10.254':
-            return 'Stormshield'
-        elif device_ip == '192.168.10.11':
-            return 'Borne WiFi'
-        elif device_ip == '192.168.10.15':
-            return 'Switch Principal'
-        elif device_ip == '192.168.10.16':
-            return 'Switch Secondaire'
-        elif device_ip == '192.168.10.10':
-            return 'Serveur AD'
-        elif device_ip == '192.168.10.110':
-            return 'Serveur IA'
+        device_ip = event.get('_device_ip', '').strip()
+        
+        if device_ip:
+            ip_map = {
+                '192.168.10.254': 'Stormshield',
+                '192.168.10.11': 'Borne WiFi',
+                '192.168.10.15': 'Switch Principal',
+                '192.168.10.16': 'Switch Secondaire',
+                '192.168.10.10': 'Serveur AD',
+                '192.168.10.110': 'Serveur IA'
+            }
+            
+            if device_ip in ip_map:
+                return ip_map[device_ip]
         
         computer = event.get('computer', '').strip()
         
-        if computer == '192.168.10.254':
-            return 'Stormshield'
-        elif computer == '192.168.10.11':
-            return 'Borne WiFi'
-        elif computer == '192.168.10.15':
-            return 'Switch Principal'
-        elif computer == '192.168.10.16':
-            return 'Switch Secondaire'
-        elif computer == '192.168.10.10':
-            return 'Serveur AD'
-        elif computer == '192.168.10.110':
-            return 'Serveur IA'
+        if computer:
+            ip_map = {
+                '192.168.10.254': 'Stormshield',
+                '192.168.10.11': 'Borne WiFi',
+                '192.168.10.15': 'Switch Principal',
+                '192.168.10.16': 'Switch Secondaire',
+                '192.168.10.10': 'Serveur AD',
+                '192.168.10.110': 'Serveur IA'
+            }
+            
+            if computer in ip_map:
+                return ip_map[computer]
         
         source = event.get('source', '').lower()
         
         if 'stormshield' in source or '192.168.10.254' in source:
             return 'Stormshield'
-        elif 'wifi' in source or 'borne' in source:
+        elif 'wifi' in source or 'borne' in source or '192.168.10.11' in source:
             return 'Borne WiFi'
-        elif 'switch' in source and ('15' in source or 'principal' in source):
-            return 'Switch Principal'
-        elif 'switch' in source and ('16' in source or 'secondaire' in source):
-            return 'Switch Secondaire'
-        elif 'ad' in source or 'active directory' in source:
+        elif 'switch' in source:
+            if '15' in source or 'principal' in source:
+                return 'Switch Principal'
+            elif '16' in source or 'secondaire' in source:
+                return 'Switch Secondaire'
+        elif 'ad' in source or 'active directory' in source or '192.168.10.10' in source:
             return 'Serveur AD'
-        elif 'ia' in source or 'serveur-ia' in source:
+        elif 'ia' in source or 'serveur-ia' in source or '192.168.10.110' in source:
             return 'Serveur IA'
         
         return 'Autres'
     
     def analyze_intrusion_patterns(self, message):
-        """Analyse approfondie des patterns d'intrusion"""
+        """Analyse patterns d'intrusion"""
         message_lower = message.lower()
         
         for pattern, priority in self.INTRUSION_PATTERNS:
@@ -186,7 +232,8 @@ class EventFilter:
             if keyword in message_lower:
                 score = max(score, keyword_score)
                 
-                if event.get('_device_ip') == '192.168.10.254':
+                device = self.get_device_from_event(event)
+                if device == 'Stormshield':
                     score = min(10, score + 1)
         
         if event.get('_is_syslog', False) and event.get('_priority'):
@@ -204,7 +251,7 @@ class EventFilter:
         return score
     
     def get_priority_label(self, priority):
-        """Retourne le label et emoji"""
+        """Label de priorité"""
         if priority >= 9:
             return "🔴 CRITIQUE", "🔴"
         elif priority >= 7:
@@ -217,18 +264,22 @@ class EventFilter:
             return "⚪ INFO", "⚪"
     
     def filter_events(self, events, enable_online_check=True):
-        """Filtrage optimisé"""
+        """Filtrage des événements"""
         if not events:
             return []
         
+        # 🔥 CLASSIFICATION SYSLOG AUTOMATIQUE
+        for event in events:
+            self.classify_event_as_syslog(event)
+        
+        # Comptage séparé
+        syslog_count = sum(1 for e in events if e.get('_is_syslog', False))
+        windows_count = sum(1 for e in events if not e.get('_is_syslog', False))
+        
         self.log(f"\n🔍 FILTRAGE PAR APPAREIL:")
         self.log(f"   • Événements reçus: {len(events)}")
-        
-        syslog_events = [e for e in events if e.get('_is_syslog', False)]
-        windows_events = [e for e in events if not e.get('_is_syslog', False)]
-        
-        self.log(f"   • Événements Syslog: {len(syslog_events)}")
-        self.log(f"   • Événements Windows: {len(windows_events)}")
+        self.log(f"   • Événements Syslog: {syslog_count}")
+        self.log(f"   • Événements Windows: {windows_count}")
         
         result = []
         duplicates = 0
@@ -251,17 +302,23 @@ class EventFilter:
                 continue
             
             device = self.get_device_from_event(event)
-            
-            # ✅ APPLIQUER SEUIL ALIGNÉ
-            min_threshold = self.DEVICE_THRESHOLDS.get(device, 7)
+            min_threshold = self.DEVICE_THRESHOLDS.get(device, 6)
             
             if priority < min_threshold:
                 filtered_by_threshold += 1
                 
                 if device not in device_stats:
-                    device_stats[device] = {'total': 0, 'filtered': 0, 'kept': 0}
+                    device_stats[device] = {
+                        'total': 0, 'filtered': 0, 'kept': 0,
+                        'syslog': 0, 'windows': 0
+                    }
                 device_stats[device]['total'] += 1
                 device_stats[device]['filtered'] += 1
+                
+                if event.get('_is_syslog', False):
+                    device_stats[device]['syslog'] += 1
+                else:
+                    device_stats[device]['windows'] += 1
                 
                 continue
             
@@ -269,11 +326,18 @@ class EventFilter:
             result.append(event)
             
             if device not in device_stats:
-                device_stats[device] = {'total': 0, 'filtered': 0, 'kept': 0}
+                device_stats[device] = {
+                    'total': 0, 'filtered': 0, 'kept': 0,
+                    'syslog': 0, 'windows': 0
+                }
             device_stats[device]['total'] += 1
             device_stats[device]['kept'] += 1
+            
+            if event.get('_is_syslog', False):
+                device_stats[device]['syslog'] += 1
+            else:
+                device_stats[device]['windows'] += 1
         
-        # Stats globales
         self.log(f"\n📊 RÉSULTAT FILTRAGE:")
         self.log(f"   • Doublons ignorés: {duplicates}")
         self.log(f"   • Filtrés par seuil: {filtered_by_threshold}")
@@ -283,29 +347,50 @@ class EventFilter:
         
         self.log(f"   ✅ Événements gardés: {len(result)}")
         
-        # Stats par appareil
+        final_syslog = sum(1 for e in result if e.get('_is_syslog', False))
+        final_windows = sum(1 for e in result if not e.get('_is_syslog', False))
+        
+        self.log(f"\n📈 RÉPARTITION FINALE:")
+        self.log(f"   • Syslog gardés: {final_syslog}")
+        self.log(f"   • Windows gardés: {final_windows}")
+        
         if device_stats:
             self.log(f"\n📡 DÉTAIL PAR APPAREIL:")
             for device, stats in sorted(device_stats.items()):
-                threshold = self.DEVICE_THRESHOLDS.get(device, 7)
+                threshold = self.DEVICE_THRESHOLDS.get(device, 6)
                 
-                # 🔥 Emoji spécial pour Borne WiFi
-                if device == "Borne WiFi":
-                    icon = "🔥" if threshold == 9 else "📡"
-                    status = "TRÈS SÉLECTIF" if threshold == 9 else "Normal"
-                    self.log(f"   {icon} {device} (seuil {threshold}/10 - {status}):")
-                elif device == "Stormshield":
-                    icon = "✅"
-                    self.log(f"   {icon} {device} (seuil {threshold}/10 - Surveillance normale):")
+                device_icons = {
+                    'Stormshield': '🔥',
+                    'Borne WiFi': '📡',
+                    'Switch Principal': '🔌',
+                    'Switch Secondaire': '🔌',
+                    'Serveur AD': '🖥️',
+                    'Serveur IA': '🤖',
+                    'Autres': '❓'
+                }
+                
+                icon = device_icons.get(device, '🔟')
+                
+                # 🔥 INDICATION SI SYSLOG
+                if device in self.SYSLOG_DEVICES:
+                    device_type = " [SYSLOG]"
                 else:
-                    icon = "✅"
-                    self.log(f"   {icon} {device} (seuil {threshold}/10):")
+                    device_type = " [WINDOWS]"
                 
-                self.log(f"      - Reçus: {stats['total']}")
+                if threshold == 9:
+                    mode = "CRITIQUE SEULEMENT"
+                elif threshold <= 3:
+                    mode = "Ultra-sensible"
+                elif threshold == 5:
+                    mode = "Sensible"
+                else:
+                    mode = "Équilibré"
+                
+                self.log(f"   {icon} {device}{device_type} (seuil {threshold}/10 - {mode}):")
+                self.log(f"      - Reçus: {stats['total']} (Syslog: {stats['syslog']}, Win: {stats['windows']})")
                 self.log(f"      - Filtrés: {stats['filtered']}")
                 self.log(f"      - ✅ Gardés: {stats['kept']}")
         
-        # Stats par priorité
         priority_stats = {}
         for event in result:
             priority = event.get('_priority', 0)

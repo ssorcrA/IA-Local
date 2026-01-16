@@ -1,59 +1,28 @@
 """
-Lecteur Syslog - BORNE WIFI TRÈS SÉLECTIVE (seuil 9/10)
-Fichier : syslog_reader.py - VERSION FINALE
-✅ CORRECTIFS:
-- Borne WiFi : seuil 9 (critiques uniquement)
-- Stormshield : seuil 5 (surveillance normale)
-- Switches : seuil 6 (surveillance normale)
+Lecteur Syslog - CORRECTIF 0 ÉVÉNEMENTS
+Fichier : syslog_reader.py - VERSION DEBUGGÉE v2
+✅ CORRECTIFS APPLIQUÉS :
+- ✅ Logs de diagnostic pour identifier pourquoi 0 événements
+- ✅ Vérification étape par étape du parsing
+- ✅ Compteurs détaillés
 """
 import os
 import re
 import json
 import hashlib
 from datetime import datetime, timedelta
+from device_detector import DeviceDetector
 
 
 class SyslogReader:
-    """Lecteur Syslog avec Borne WiFi très sélective"""
+    """Lecteur Syslog avec diagnostics étendus"""
     
-    # 🔥 SEUILS AJUSTÉS - BORNE WIFI CRITIQUE UNIQUEMENT
-    MONITORED_DEVICES = {
-        '192.168.10.254': {
-            'name': 'Stormshield UTM', 
-            'type': 'firewall', 
-            'icon': '🔥', 
-            'min_priority': 5  # ✅ Surveillance normale - warnings + errors
-        },
-        '192.168.10.11': {
-            'name': 'Borne WiFi', 
-            'type': 'wifi', 
-            'icon': '📡', 
-            'min_priority': 9  # 🔥 TRÈS SÉLECTIF - Critiques uniquement
-        },
-        '192.168.10.15': {
-            'name': 'Switch Principal', 
-            'type': 'switch', 
-            'icon': '🔌', 
-            'min_priority': 6  # ✅ Surveillance normale - erreurs moyennes+
-        },
-        '192.168.10.16': {
-            'name': 'Switch Secondaire', 
-            'type': 'switch', 
-            'icon': '🔌', 
-            'min_priority': 6  # ✅ Surveillance normale
-        },
-        '192.168.10.10': {
-            'name': 'Active Directory', 
-            'type': 'server', 
-            'icon': '🖥️', 
-            'min_priority': 6  # ✅ Erreurs importantes
-        },
-        '192.168.10.110': {
-            'name': 'Serveur-IA', 
-            'type': 'server', 
-            'icon': '🤖', 
-            'min_priority': 7  # Critiques uniquement
-        },
+    # 🔥 SEUILS ULTRA-BAS
+    DEVICE_THRESHOLDS = {
+        '192.168.10.254': 3,   # ✅ Stormshield - 3/10
+        '192.168.10.11': 9,    # 🔥 Borne WiFi - 9/10 (critique seulement)
+        '192.168.10.15': 3,    # ✅ Switch Principal - 3/10
+        '192.168.10.16': 3,    # ✅ Switch Secondaire - 3/10
     }
     
     def __init__(self, log_callback=None, verbose=False):
@@ -67,10 +36,15 @@ class SyslogReader:
         self.processed_hashes = set()
         self.stop_requested = False
         
-        self.stats_total_lines = 0
-        self.stats_by_device = {}
-        self.stats_by_severity = {}
-        self.stats_filtered_out = 0
+        # 🔥 COMPTEURS DE DIAGNOSTIC
+        self.debug_total_lines = 0
+        self.debug_empty_lines = 0
+        self.debug_no_ip = 0
+        self.debug_ip_found = {}
+        self.debug_severity_found = {}
+        self.debug_filtered_by_threshold = 0
+        self.debug_duplicates = 0
+        self.debug_passed = 0
         
         self.load_state()
     
@@ -85,6 +59,48 @@ class SyslogReader:
         else:
             print(message)
     
+    def reset_debug_counters(self):
+        """Réinitialise les compteurs de diagnostic"""
+        self.debug_total_lines = 0
+        self.debug_empty_lines = 0
+        self.debug_no_ip = 0
+        self.debug_ip_found.clear()
+        self.debug_severity_found.clear()
+        self.debug_filtered_by_threshold = 0
+        self.debug_duplicates = 0
+        self.debug_passed = 0
+    
+    def show_debug_report(self):
+        """Affiche un rapport de diagnostic"""
+        self.log("\n" + "="*80, silent=False)
+        self.log("🔬 RAPPORT DE DIAGNOSTIC SYSLOG", silent=False)
+        self.log("="*80, silent=False)
+        
+        self.log(f"\n📊 TRAITEMENT DES LIGNES :", silent=False)
+        self.log(f"   • Total lignes scannées : {self.debug_total_lines}", silent=False)
+        self.log(f"   • Lignes vides ignorées : {self.debug_empty_lines}", silent=False)
+        self.log(f"   • Lignes sans IP : {self.debug_no_ip}", silent=False)
+        
+        if self.debug_ip_found:
+            self.log(f"\n📡 IP DÉTECTÉES :", silent=False)
+            for ip, count in sorted(self.debug_ip_found.items(), key=lambda x: x[1], reverse=True):
+                device = DeviceDetector.detect_from_ip(ip)
+                name = device['name'] if device else 'Inconnu'
+                threshold = self.DEVICE_THRESHOLDS.get(ip, 6)
+                self.log(f"   • {ip} ({name}) : {count} lignes [seuil: {threshold}/10]", silent=False)
+        
+        if self.debug_severity_found:
+            self.log(f"\n⚠️ SEVERITIES DÉTECTÉES :", silent=False)
+            for sev, count in sorted(self.debug_severity_found.items(), key=lambda x: x[1], reverse=True):
+                self.log(f"   • {sev.upper()} : {count}", silent=False)
+        
+        self.log(f"\n🔍 FILTRAGE :", silent=False)
+        self.log(f"   • Filtrés par seuil : {self.debug_filtered_by_threshold}", silent=False)
+        self.log(f"   • Doublons détectés : {self.debug_duplicates}", silent=False)
+        self.log(f"   ✅ PASSÉS AU FILTRE : {self.debug_passed}", silent=False)
+        
+        self.log("="*80 + "\n", silent=False)
+    
     def load_state(self):
         """Charge l'état sauvegardé"""
         try:
@@ -95,21 +111,28 @@ class SyslogReader:
                     last_ts = state.get('last_timestamp')
                     if last_ts:
                         self.last_timestamp = datetime.fromisoformat(last_ts)
-        except:
-            pass
+                    
+                    self.processed_hashes = set(state.get('processed_hashes', []))
+                    
+                    if self.last_position > 0:
+                        self.log(f"📌 Position reprise: ligne {self.last_position}", silent=False)
+        except Exception as e:
+            self.log(f"⚠️ Impossible de charger l'état: {e}", silent=False)
+            self.last_position = 0
     
     def save_state(self):
-        """Sauvegarde l'état"""
+        """Sauvegarde l'état + hashes"""
         try:
             state = {
                 'last_position': self.last_position,
                 'last_timestamp': self.last_timestamp.isoformat() if self.last_timestamp else None,
+                'processed_hashes': list(self.processed_hashes)[-10000:],
                 'last_save': datetime.now().isoformat()
             }
             with open(self.state_file, 'w', encoding='utf-8') as f:
                 json.dump(state, f, indent=2)
-        except:
-            pass
+        except Exception as e:
+            self.log(f"⚠️ Erreur sauvegarde état: {e}", silent=False)
     
     def request_stop(self):
         self.stop_requested = True
@@ -129,58 +152,60 @@ class SyslogReader:
             size_mb = os.path.getsize(self.syslog_path) / (1024 * 1024)
             self.log(f"✅ Syslog détecté: {size_mb:.2f} MB")
             
-            self.log("\n📡 ÉQUIPEMENTS SURVEILLÉS (seuils ajustés):")
-            for ip, info in self.MONITORED_DEVICES.items():
-                icon = "🔥" if info['min_priority'] == 9 else "✅"
-                self.log(f"   {info['icon']} {ip} → {info['name']} (seuil: {info['min_priority']}/10) {icon if info['min_priority'] == 9 else ''}")
+            self.log("\n📡 ÉQUIPEMENTS RÉSEAU SURVEILLÉS (4 appareils) :")
+            
+            network_devices = [
+                ('192.168.10.254', DeviceDetector.detect_from_ip('192.168.10.254')),
+                ('192.168.10.11', DeviceDetector.detect_from_ip('192.168.10.11')),
+                ('192.168.10.15', DeviceDetector.detect_from_ip('192.168.10.15')),
+                ('192.168.10.16', DeviceDetector.detect_from_ip('192.168.10.16'))
+            ]
+            
+            for ip, device in network_devices:
+                threshold = self.DEVICE_THRESHOLDS.get(ip, 6)
+                
+                if threshold <= 3:
+                    mode = "🟢 ULTRA-SENSIBLE (tout)"
+                elif threshold == 5:
+                    mode = "🟡 SENSIBLE (warnings+)"
+                elif threshold == 9:
+                    mode = "🔴 CRITIQUE SEULEMENT (9/10)"
+                else:
+                    mode = "🟡 ÉQUILIBRÉ"
+                
+                self.log(f"   {device['icon']} {ip} → {device['full_name']} (seuil: {threshold}/10 - {mode})")
             
             return True
         except PermissionError:
             raise Exception("Accès refusé au fichier Syslog")
     
     def extract_ip_from_line(self, line):
-        """Extrait l'IP de manière robuste"""
-        # IP en début
+        """Extraction IP robuste"""
         ip_match = re.match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', line)
         if ip_match:
             ip = ip_match.group(1)
-            if ip in self.MONITORED_DEVICES:
+            if ip in self.DEVICE_THRESHOLDS:
                 return ip
         
-        # Recherche début
-        line_start = line[:50]
-        for ip in self.MONITORED_DEVICES.keys():
-            if ip in line_start:
-                return ip
+        if '192.168.10.11' in line[:200]:
+            return '192.168.10.11'
         
-        # Recherche complète
+        line_start = line[:100]
+        for target_ip in self.DEVICE_THRESHOLDS.keys():
+            if target_ip in line_start:
+                return target_ip
+        
         ip_pattern = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
         found_ips = re.findall(ip_pattern, line)
         
         for ip in found_ips:
-            if ip in self.MONITORED_DEVICES:
+            if ip in self.DEVICE_THRESHOLDS:
                 return ip
         
-        return found_ips[0] if found_ips else None
-    
-    def get_device_info(self, ip):
-        """Retourne les infos de l'appareil"""
-        if ip in self.MONITORED_DEVICES:
-            return self.MONITORED_DEVICES[ip]
-        
-        return {
-            'name': f'Équipement {ip}',
-            'type': 'unknown',
-            'icon': '❓',
-            'min_priority': 7
-        }
+        return None
     
     def extract_severity(self, line):
-        """
-        ✅ EXTRACTION SEVERITY - OPTIMISÉE
-        """
-        
-        # FORMAT 1: Stormshield tabulations
+        """Extraction severity optimisée"""
         if '\t' in line:
             parts = line.split('\t')
             
@@ -207,7 +232,6 @@ class SyslogReader:
                     severity, priority = severity_map[field]
                     return severity, priority
         
-        # FORMAT 2: Severity explicite
         line_lower = line.lower()
         
         severity_patterns = [
@@ -225,55 +249,23 @@ class SyslogReader:
             if re.search(pattern, line_lower):
                 return severity, priority
         
-        # ✅ FORMAT 3: MOTS-CLÉS INTRUSION
         critical_keywords = {
-            # Intrusions directes
-            'attack': 10, 'intrusion': 10, 'breach': 10, 'compromise': 10,
-            'malware': 10, 'virus': 10, 'exploit': 10, 'hack': 10,
-            
-            # Blocages firewall
+            'attack': 10, 'intrusion': 10, 'breach': 10,
+            'malware': 10, 'virus': 10, 'exploit': 10,
             'blocked': 8, 'denied': 8, 'drop': 8, 'reject': 8,
-            'refused': 8, 'forbidden': 8,
-            
-            # Tentatives suspectes
-            'unauthorized': 9, 'invalid': 7, 'illegal': 8,
+            'unauthorized': 9, 'invalid': 7,
             'suspicious': 8, 'anomaly': 8,
-            
-            # Scans
-            'scan': 8, 'probe': 7, 'port scan': 9,
-            
-            # Auth
+            'scan': 8, 'probe': 7,
             'authentication failed': 8, 'login failed': 8,
-            'brute': 9, 'brute force': 10,
-            
-            # Erreurs
-            'fail': 6, 'failed': 6, 'failure': 6,
-            'timeout': 5, 'error': 6,
-            
-            # Trafic malveillant
+            'brute': 9, 'fail': 6, 'error': 6,
+            'timeout': 5,
             'ddos': 10, 'dos': 9, 'flood': 9,
         }
         
         max_priority = 0
-        matched_keywords = []
         
         for keyword, priority in critical_keywords.items():
             if keyword in line_lower:
-                max_priority = max(max_priority, priority)
-                matched_keywords.append(keyword)
-        
-        # Patterns avancés
-        advanced_patterns = [
-            (r'failed\s+login\s+attempt', 8),
-            (r'multiple\s+failed\s+attempts', 9),
-            (r'\d+\s+failed\s+attempts', 9),
-            (r'access\s+denied\s+from', 8),
-            (r'connection\s+refused\s+from', 7),
-            (r'invalid\s+user', 8),
-        ]
-        
-        for pattern, priority in advanced_patterns:
-            if re.search(pattern, line_lower):
                 max_priority = max(max_priority, priority)
         
         if max_priority > 0:
@@ -284,40 +276,67 @@ class SyslogReader:
             severity = severity_labels.get(max_priority, 'notice')
             return severity, max_priority
         
-        # Par défaut
         return 'info', 3
     
     def should_create_ticket(self, ip, severity, priority):
-        """✅ RÈGLE PAR APPAREIL - SEUILS AJUSTÉS"""
-        device_info = self.get_device_info(ip)
-        min_priority = device_info.get('min_priority', 7)
-        
+        """Règles par appareil"""
+        min_priority = self.DEVICE_THRESHOLDS.get(ip, 6)
         return priority >= min_priority
     
+    def generate_line_hash(self, line, ip):
+        """Génère hash unique"""
+        normalized = re.sub(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}', '', line)
+        normalized = re.sub(r'\w+\s+\d+\s+\d+:\d+:\d+', '', normalized)
+        
+        content = f"{ip}_{normalized[:200]}"
+        return hashlib.md5(content.encode()).hexdigest()
+    
     def parse_line(self, line):
-        """Parse une ligne Syslog"""
+        """Parse ligne avec diagnostic"""
         try:
+            self.debug_total_lines += 1
+            
             line = line.strip()
             if not line or len(line) < 20:
+                self.debug_empty_lines += 1
                 return None
             
-            # 1. IP
+            # 🔥 DIAGNOSTIC : Extraction IP
             ip = self.extract_ip_from_line(line)
             if not ip:
+                self.debug_no_ip += 1
                 return None
             
-            # 2. Appareil
-            device = self.get_device_info(ip)
+            # 🔥 COMPTEUR IP
+            self.debug_ip_found[ip] = self.debug_ip_found.get(ip, 0) + 1
             
-            # 3. Severity + Priority
+            # Hash de déduplication
+            line_hash = self.generate_line_hash(line, ip)
+            if line_hash in self.processed_hashes:
+                self.debug_duplicates += 1
+                return None
+            
+            device_info = DeviceDetector.detect_from_ip(ip)
+            
+            if not device_info:
+                return None
+            
+            # 🔥 DIAGNOSTIC : Extraction Severity
             severity, priority = self.extract_severity(line)
             
-            # 4. ✅ VÉRIFIE SEUIL
+            # 🔥 COMPTEUR SEVERITY
+            self.debug_severity_found[severity] = self.debug_severity_found.get(severity, 0) + 1
+            
+            # 🔥 DIAGNOSTIC : Filtrage par seuil
             if not self.should_create_ticket(ip, severity, priority):
-                self.stats_filtered_out += 1
+                self.debug_filtered_by_threshold += 1
                 return None
             
-            # 5. Timestamp
+            # 🔥 PASSÉ TOUS LES FILTRES
+            self.debug_passed += 1
+            
+            self.processed_hashes.add(line_hash)
+            
             timestamp = datetime.now()
             try:
                 time_match = re.search(r'(\w+)\s+(\d+)\s+(\d+:\d+:\d+)', line)
@@ -331,7 +350,6 @@ class SyslogReader:
             except:
                 pass
             
-            # 6. Facility
             facility = "syslog"
             line_lower = line.lower()
             if 'asqd' in line_lower or 'firewall' in line_lower:
@@ -341,26 +359,23 @@ class SyslogReader:
             elif 'wifi' in line_lower or 'wlan' in line_lower:
                 facility = "wifi"
             
-            # 7. Stats
-            self.stats_by_severity[severity] = self.stats_by_severity.get(severity, 0) + 1
-            self.stats_by_device[device['name']] = self.stats_by_device.get(device['name'], 0) + 1
-            
             return {
                 'timestamp': timestamp,
                 'ip': ip,
-                'device': device,
+                'device': device_info,
                 'facility': facility,
                 'severity': severity,
                 'priority': priority,
                 'message': line,
-                'raw_line': line
+                'raw_line': line,
+                'line_hash': line_hash
             }
             
         except Exception as e:
             return None
     
     def convert_to_event(self, log_entry):
-        """Convertit en format événement"""
+        """Convertir avec SOURCE = Device détecté"""
         device = log_entry['device']
         severity = log_entry['severity']
         priority = log_entry['priority']
@@ -376,64 +391,59 @@ class SyslogReader:
         }
         
         event_id = event_ids.get(severity, 5000)
-        record_hash = int(hashlib.md5(log_entry['raw_line'].encode()).hexdigest()[:8], 16)
+        record_hash = int(log_entry['line_hash'][:8], 16)
+        
+        # 🔥 SOURCE = NOM COMPLET DEVICE (pas IP brute)
+        source_display = f"{device['full_name']} ({ip})"
         
         return {
             'record_number': record_hash,
             'time_generated': log_entry['timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
-            'source': f"{device['icon']} {device['name']} ({ip})",
+            'source': source_display,  # ✅ SOURCE CORRECTE
             'event_id': event_id,
             'event_type': 'ERROR' if priority >= 7 else 'WARNING',
             'computer': ip,
             'message': log_entry['message'],
+            
             '_priority': priority,
             '_is_syslog': True,
             '_device_type': device['type'],
             '_device_name': device['name'],
+            '_device_full_name': device['full_name'],
             '_device_ip': ip,
+            '_device_icon': device['icon'],
+            '_device_folder': device['folder'],
+            '_device_description': device['description'],
             '_severity': severity,
             '_facility': log_entry['facility']
         }
     
-    def read_events(self, since_time=None, force_full_scan=False, silent=False):
-        """Lecture normale (surveillance continue)"""
+    def read_new_events(self):
+        """Surveillance continue"""
         if not os.path.exists(self.syslog_path):
             raise Exception("Fichier Syslog introuvable")
         
         events = []
         self.reset_stop()
         
-        self.stats_total_lines = 0
-        self.stats_by_device = {}
-        self.stats_by_severity = {}
-        self.stats_filtered_out = 0
+        # 🔥 RESET COMPTEURS
+        self.reset_debug_counters()
         
         try:
-            if not silent:
-                self.log("📂 Lecture Syslog (surveillance)...")
-            
             with open(self.syslog_path, 'r', encoding='utf-8', errors='replace') as f:
                 all_lines = f.readlines()
             
             total_lines = len(all_lines)
             
-            if self.last_position < total_lines:
-                lines_to_process = all_lines[self.last_position:]
-                if not silent:
-                    self.log(f"   📖 Nouvelles lignes: {len(lines_to_process)}")
-            else:
-                if not silent:
-                    self.log(f"   ✅ Aucune nouvelle ligne")
-                self.save_state()
+            if self.last_position >= total_lines:
                 return []
             
+            new_lines = all_lines[self.last_position:]
             latest_timestamp = self.last_timestamp
             
-            for i, line in enumerate(lines_to_process):
+            for i, line in enumerate(new_lines):
                 if i % 100 == 0 and self.stop_requested:
                     break
-                
-                self.stats_total_lines += 1
                 
                 if not line.strip():
                     continue
@@ -449,9 +459,6 @@ class SyslogReader:
                 if not latest_timestamp or log_entry['timestamp'] > latest_timestamp:
                     latest_timestamp = log_entry['timestamp']
                 
-                if since_time and log_entry['timestamp'] < since_time:
-                    continue
-                
                 event = self.convert_to_event(log_entry)
                 events.append(event)
             
@@ -462,15 +469,9 @@ class SyslogReader:
             
             self.save_state()
             
-            if not silent and events:
-                self.log(f"\n📊 SYSLOG RÉSULTAT:")
-                self.log(f"   • Lignes scannées: {self.stats_total_lines}")
-                self.log(f"   📈 ÉVÉNEMENTS: {len(events)}")
-                
-                if self.stats_by_device:
-                    self.log(f"\n📡 PAR ÉQUIPEMENT:")
-                    for device, count in sorted(self.stats_by_device.items(), key=lambda x: x[1], reverse=True):
-                        self.log(f"   • {device}: {count} incidents")
+            # 🔥 AFFICHER RAPPORT SI 0 ÉVÉNEMENT
+            if len(events) == 0 and self.debug_total_lines > 0:
+                self.show_debug_report()
             
             return events
             
@@ -479,7 +480,7 @@ class SyslogReader:
             raise
     
     def read_initial_check(self, hours=24):
-        """SCAN COMPLET"""
+        """Scan complet"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
         self.log(f"📅 SCAN COMPLET Syslog {hours}h...")
         
@@ -489,10 +490,8 @@ class SyslogReader:
         events = []
         self.reset_stop()
         
-        self.stats_total_lines = 0
-        self.stats_by_device = {}
-        self.stats_by_severity = {}
-        self.stats_filtered_out = 0
+        # 🔥 RESET COMPTEURS
+        self.reset_debug_counters()
         
         try:
             self.log("📂 Lecture COMPLÈTE du fichier...")
@@ -505,8 +504,6 @@ class SyslogReader:
             for i, line in enumerate(all_lines):
                 if i % 1000 == 0 and self.stop_requested:
                     break
-                
-                self.stats_total_lines += 1
                 
                 if not line.strip():
                     continue
@@ -522,23 +519,14 @@ class SyslogReader:
                 event = self.convert_to_event(log_entry)
                 events.append(event)
             
+            self.last_position = len(all_lines)
+            self.save_state()
+            
+            # 🔥 TOUJOURS AFFICHER RAPPORT DIAGNOSTIC
+            self.show_debug_report()
+            
             self.log(f"\n📊 SCAN RÉSULTAT:")
-            self.log(f"   • Lignes: {self.stats_total_lines}")
-            self.log(f"   • Filtrées: {self.stats_filtered_out}")
-            self.log(f"   📈 ÉVÉNEMENTS: {len(events)}")
-            
-            if self.stats_by_severity:
-                self.log(f"\n📈 PAR SEVERITY:")
-                for sev in ['emergency', 'alert', 'critical', 'error', 'warning', 'notice']:
-                    if sev in self.stats_by_severity:
-                        count = self.stats_by_severity[sev]
-                        emoji = "🔴" if sev in ['emergency','alert','critical'] else "🟠"
-                        self.log(f"   {emoji} {sev.upper()}: {count}")
-            
-            if self.stats_by_device:
-                self.log(f"\n📡 PAR ÉQUIPEMENT:")
-                for device, count in sorted(self.stats_by_device.items(), key=lambda x: x[1], reverse=True):
-                    self.log(f"   • {device}: {count} incidents")
+            self.log(f"   ✅ ÉVÉNEMENTS RETOURNÉS: {len(events)}")
             
             return events
             
@@ -547,7 +535,7 @@ class SyslogReader:
             raise
     
     def read_startup_check(self):
-        """LECTURE DÉMARRAGE - 5 MINUTES"""
+        """Lecture démarrage"""
         cutoff_time = datetime.now() - timedelta(minutes=5)
         self.log(f"⏰ DÉMARRAGE - Scan 5 dernières minutes...")
         
@@ -557,29 +545,14 @@ class SyslogReader:
         events = []
         self.reset_stop()
         
-        self.stats_total_lines = 0
-        self.stats_by_device = {}
-        self.stats_by_severity = {}
-        self.stats_filtered_out = 0
-        
         try:
             with open(self.syslog_path, 'r', encoding='utf-8', errors='replace') as f:
                 all_lines = f.readlines()
             
             total_lines = len(all_lines)
-            self.log(f"   📖 Lignes: {total_lines}")
-            
             self.last_position = total_lines
             
-            for i, line in enumerate(all_lines):
-                if i % 1000 == 0 and self.stop_requested:
-                    break
-                
-                self.stats_total_lines += 1
-                
-                if not line.strip():
-                    continue
-                
+            for line in all_lines:
                 log_entry = self.parse_line(line)
                 
                 if not log_entry:
@@ -595,20 +568,13 @@ class SyslogReader:
                     self.last_timestamp = log_entry['timestamp']
             
             self.save_state()
-            
-            self.log(f"\n📊 DÉMARRAGE:")
-            self.log(f"   • Position: {self.last_position}")
-            self.log(f"   📈 ÉVÉNEMENTS (5 min): {len(events)}")
+            self.log(f"📊 DÉMARRAGE: {len(events)} événements (5 min)")
             
             return events
             
         except Exception as e:
             self.log(f"❌ Erreur: {str(e)}")
             raise
-    
-    def read_new_events(self):
-        """SURVEILLANCE CONTINUE"""
-        return self.read_events(force_full_scan=False, silent=False)
     
     def reset(self):
         """Réinitialise le lecteur"""

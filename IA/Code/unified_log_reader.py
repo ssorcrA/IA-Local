@@ -1,27 +1,23 @@
 """
-Lecteur unifié - AVEC DÉMARRAGE 5 MINUTES
-Fichier : unified_log_reader.py
-CORRECTIF:
-- ✅ Au démarrage: Syslog sur 5 minutes (pas 24h)
-- ✅ Surveillance: nouvelles lignes
-- ✅ Analyse 24h: scan complet
+Lecteur unifié - SYSLOG 100% SILENCIEUX
+✅ Masque TOUTES les opérations Syslog
+✅ Seulement rapports périodiques
 """
 import os
-import glob
 from datetime import datetime, timedelta
 from event_reader import EventReader
 from syslog_reader import SyslogReader
 
 
 class UnifiedLogReader:
-    """Lecteur unifié avec démarrage intelligent"""
+    """Lecteur unifié avec Syslog silencieux"""
     
     def __init__(self, log_callback=None):
         self.log_callback = log_callback
         
         # Lecteurs spécialisés
         self.event_reader = EventReader(log_callback=log_callback)
-        self.syslog_reader = SyslogReader(log_callback=log_callback)
+        self.syslog_reader = SyslogReader(log_callback=log_callback, verbose=False)
         
         # Chemins de surveillance
         self.log_sources = {
@@ -30,9 +26,17 @@ class UnifiedLogReader:
         }
         
         self.available_sources = []
-        self.first_run = True  # 🔥 Flag pour démarrage
+        self.first_run = True
+        
+        # Stats Syslog (pour rapports)
+        self.syslog_events_count = 0
+        self.syslog_last_size = 0
     
-    def log(self, message):
+    def log(self, message, silent=False):
+        """Log avec option silent"""
+        if silent:
+            return
+        
         if self.log_callback:
             try:
                 self.log_callback(message)
@@ -40,6 +44,30 @@ class UnifiedLogReader:
                 print(message)
         else:
             print(message)
+    
+    def check_syslog_status(self, silent=True):
+        """Vérifie Syslog SILENCIEUSEMENT"""
+        syslog_path = self.log_sources['syslog']
+        
+        if not os.path.exists(syslog_path):
+            if not silent:
+                self.log(f"   ❌ Fichier introuvable: {syslog_path}")
+            return False
+        
+        try:
+            size = os.path.getsize(syslog_path)
+            
+            if not silent:
+                size_mb = size / (1024 * 1024)
+                self.log(f"   📊 Taille: {size_mb:.2f} MB")
+            
+            self.syslog_last_size = size
+            return True
+            
+        except Exception as e:
+            if not silent:
+                self.log(f"   ❌ Erreur lecture: {e}")
+            return False
     
     def check_availability(self):
         """Vérifie toutes les sources disponibles"""
@@ -54,11 +82,29 @@ class UnifiedLogReader:
         except Exception as e:
             self.log(f"⚠️ ForwardedEvents : Indisponible ({e})")
         
-        # 2. Syslog principal
+        # 2. Syslog principal (vérification silencieuse)
         try:
-            self.syslog_reader.check_availability()
-            self.available_sources.append('syslog')
-            self.log("✅ Syslog principal : Disponible")
+            self.log("\n🔗 SOURCE : Syslog Principal")
+            self.log("-" * 80)
+            
+            if self.check_syslog_status(silent=False):
+                self.syslog_reader.check_availability()
+                self.available_sources.append('syslog')
+                self.log("✅ Syslog principal : Disponible")
+                
+                # Afficher les 4 équipements réseau
+                self.log("\n📡 ÉQUIPEMENTS RÉSEAU SURVEILLÉS (depuis Syslog):")
+                self.log("   🔥 192.168.10.254 → Stormshield UTM")
+                self.log("   📡 192.168.10.11  → Borne WiFi")
+                self.log("   🔌 192.168.10.15  → Switch Principal")
+                self.log("   🔌 192.168.10.16  → Switch Secondaire")
+                
+                self.log("\n💡 NOTA: Les serveurs sont surveillés via ForwardedEvents:")
+                self.log("   🖥️ 192.168.10.10  → Serveur AD (Windows Events)")
+                self.log("   🤖 192.168.10.110 → Serveur IA (Windows Events)")
+            else:
+                self.log("❌ Syslog : État fichier problématique")
+            
         except Exception as e:
             self.log(f"⚠️ Syslog principal : Indisponible ({e})")
         
@@ -72,9 +118,7 @@ class UnifiedLogReader:
     
     def read_initial_check(self, hours=24):
         """
-        🔥 ANALYSE INITIALE (scan complet)
-        - ForwardedEvents : read_events(since_time)
-        - Syslog : read_initial_check() → SCAN COMPLET
+        🔥 ANALYSE INITIALE - Syslog silencieux
         """
         cutoff_time = datetime.now() - timedelta(hours=hours)
         
@@ -97,16 +141,26 @@ class UnifiedLogReader:
             except Exception as e:
                 self.log(f"❌ Erreur ForwardedEvents: {e}\n")
         
-        # 2. Syslog - SCAN COMPLET
+        # 🔥 2. SYSLOG - 100% SILENCIEUX
         if 'syslog' in self.available_sources:
             try:
-                self.log("\n📗 SOURCE : Syslog (SCAN COMPLET)")
+                # Juste un message de début
+                self.log("\n🔗 SOURCE : Syslog (équipements réseau)")
                 self.log("-" * 80)
+                self.log("📖 Lecture silencieuse en cours...")
                 
+                # 🔥 LECTURE SILENCIEUSE
                 events = self.syslog_reader.read_initial_check(hours=hours)
                 
+                self.syslog_events_count = len(events)
+                
+                # Résultat simple
+                self.log(f"\n✅ {len(events)} événement(s) Syslog détectés")
+                
+                if len(events) == 0:
+                    self.log("💡 Aucun événement Syslog critique dans la période")
+                
                 all_events.extend(events)
-                self.log(f"✅ {len(events)} événement(s) Syslog\n")
             
             except Exception as e:
                 self.log(f"❌ Erreur Syslog: {e}\n")
@@ -124,62 +178,45 @@ class UnifiedLogReader:
     
     def read_new_events(self):
         """
-        🔥 SURVEILLANCE CONTINUE
-        - Si première exécution: Syslog sur 5 minutes
-        - Sinon: nouvelles lignes uniquement
+        🔥 SURVEILLANCE CONTINUE - 100% SILENCIEUSE
         """
-        self.log(f"\n🔄 SURVEILLANCE - NOUVEAUX ÉVÉNEMENTS")
-        self.log("=" * 80)
-        
         all_events = []
         
-        # 1. ForwardedEvents
+        # 1. ForwardedEvents (silencieux)
         if 'forwarded_events' in self.available_sources:
             try:
-                self.log("\n📘 SOURCE : ForwardedEvents")
-                self.log("-" * 80)
-                
                 last_record = self.event_reader.get_last_record_number()
                 
                 if last_record > 0:
-                    events = self.event_reader.read_events(since_record=last_record)
+                    events = self.event_reader.read_events(since_record=last_record, silent=True)
                 else:
-                    # Première lecture : 2h
                     cutoff = datetime.now() - timedelta(hours=2)
-                    events = self.event_reader.read_events(since_time=cutoff)
+                    events = self.event_reader.read_events(since_time=cutoff, silent=True)
                 
                 all_events.extend(events)
-                self.log(f"✅ {len(events)} événement(s) ForwardedEvents\n")
             
-            except Exception as e:
-                self.log(f"❌ Erreur ForwardedEvents: {e}\n")
+            except:
+                pass
         
-        # 2. Syslog
+        # 🔥 2. SYSLOG - 100% SILENCIEUX (pas de logs du tout)
         if 'syslog' in self.available_sources:
             try:
-                self.log("\n📗 SOURCE : Syslog")
-                self.log("-" * 80)
-                
-                # 🔥 SI PREMIÈRE EXÉCUTION: 5 MINUTES
                 if self.first_run:
-                    self.log("⏰ Premier démarrage - Scan 5 dernières minutes")
+                    # Première fois : 5 minutes (silencieux)
                     events = self.syslog_reader.read_startup_check()
                     self.first_run = False
                 else:
-                    # Surveillance normale
+                    # Surveillance normale (silencieux)
                     events = self.syslog_reader.read_new_events()
                 
+                self.syslog_events_count = len(events)
                 all_events.extend(events)
-                self.log(f"✅ {len(events)} événement(s) Syslog\n")
             
-            except Exception as e:
-                self.log(f"❌ Erreur Syslog: {e}\n")
+            except:
+                pass
         
-        # Tri par priorité
+        # Tri par priorité (silencieux)
         all_events.sort(key=lambda x: x.get('_priority', 0), reverse=True)
-        
-        self.log("=" * 80)
-        self.log(f"📊 TOTAL GLOBAL : {len(all_events)} événement(s) collecté(s)\n")
         
         return all_events
     
@@ -190,5 +227,12 @@ class UnifiedLogReader:
             if source == 'forwarded_events':
                 summary.append("✅ ForwardedEvents (EVTX)")
             elif source == 'syslog':
-                summary.append("✅ Syslog Principal")
+                summary.append("✅ Syslog Principal (4 équipements réseau)")
         return summary
+    
+    def get_syslog_stats(self):
+        """Stats Syslog pour rapports"""
+        return {
+            'events_count': self.syslog_events_count,
+            'last_size': self.syslog_last_size
+        }

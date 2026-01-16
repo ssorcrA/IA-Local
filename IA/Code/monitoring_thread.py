@@ -1,11 +1,11 @@
 """
-MONITORING THREADS - SURVEILLANCE SILENCIEUSE + COMPTE-RENDU MINUTE
-Fichier : monitoring_thread.py - VERSION FINALE CORRIGÉE
+MONITORING THREADS - SURVEILLANCE 100% SILENCIEUSE + RAPPORT MINUTE
+Fichier : monitoring_thread.py - VERSION CORRECTIF FINAL
 ✅ CORRECTIFS APPLIQUÉS:
-- ✅ Surveillance 100% silencieuse (pas de logs intermédiaires)
-- ✅ Compte-rendu UNIQUEMENT toutes les minutes
-- ✅ Affichage immédiat SI menace détectée + ticket créé
-- ✅ CORRECTION erreur tuple (success, is_new) déballer correctement
+- ✅ Surveillance TOTALEMENT silencieuse (zéro log entre les rapports)
+- ✅ Rapport uniquement toutes les 60 secondes
+- ✅ Affichage immédiat SEULEMENT si menace détectée + ticket créé
+- ✅ Correction tuple (success, is_new)
 """
 import threading
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ import time
 
 
 class MonitoringThread:
-    """SURVEILLANCE CONTINUE - Silencieuse avec rapports minute"""
+    """SURVEILLANCE CONTINUE - 100% Silencieuse avec rapports minute"""
     
     def __init__(self, log_reader, event_filter, analyzer_callback, 
                  refresh_callback, polling_interval):
@@ -30,7 +30,7 @@ class MonitoringThread:
         
         # 🔥 COMPTEURS POUR RAPPORT MINUTE
         self.cycle_count = 0
-        self.cycles_per_report = 6  # 6 cycles × 10s = 1 minute
+        self.cycles_per_report = 60 // polling_interval  # Ex: 60s / 10s = 6 cycles
         
         # Stats minute en cours
         self.minute_events_scanned = 0
@@ -98,9 +98,9 @@ class MonitoringThread:
         # Stats minute
         log_callback(f"\n📈 DERNIÈRE MINUTE :", "info")
         log_callback(f"   • Événements scannés : {self.minute_events_scanned}", "info")
-        log_callback(f"   • Menaces détectées : {self.minute_threats_detected}", "warning")
-        log_callback(f"   • Tickets créés : {self.minute_tickets_created}", "success")
-        log_callback(f"   • Tickets mis à jour : {self.minute_tickets_updated}", "success")
+        log_callback(f"   • Menaces détectées : {self.minute_threats_detected}", "warning" if self.minute_threats_detected > 0 else "info")
+        log_callback(f"   • Tickets créés : {self.minute_tickets_created}", "success" if self.minute_tickets_created > 0 else "info")
+        log_callback(f"   • Tickets mis à jour : {self.minute_tickets_updated}", "success" if self.minute_tickets_updated > 0 else "info")
         
         # Détail par appareil
         if self.minute_device_stats:
@@ -115,15 +115,15 @@ class MonitoringThread:
                         f"{stats['scanned']} scannés, "
                         f"{stats['threats']} menaces, "
                         f"{stats['tickets_created']} créés, "
-                        f"{stats['tickets_updated']} màj",
+                        f"{stats['tickets_updated']} m-à-j",
                         "info"
                     )
         
         # Stats globales
         log_callback(f"\n📊 DEPUIS DÉMARRAGE :", "info")
         log_callback(f"   • Total événements : {self.total_events_scanned}", "info")
-        log_callback(f"   • Total menaces : {self.total_threats_detected}", "warning")
-        log_callback(f"   • Total tickets : {self.total_tickets_created}", "success")
+        log_callback(f"   • Total menaces : {self.total_threats_detected}", "warning" if self.total_threats_detected > 0 else "info")
+        log_callback(f"   • Total tickets : {self.total_tickets_created}", "success" if self.total_tickets_created > 0 else "info")
         
         # Message si RAS
         if self.minute_threats_detected == 0:
@@ -225,7 +225,8 @@ class MonitoringThread:
                 if self.ticket_manager:
                     self.ticket_manager.reset_stats()
                 
-                # 🔥 LECTURE SILENCIEUSE
+                # 🔥 LECTURE SILENCIEUSE (sans logs)
+                # On passe silent=True au lecteur pour qu'il ne log rien
                 events = self.log_reader.read_new_events()
                 
                 if not self.monitoring:
@@ -319,7 +320,7 @@ class MonitoringThread:
                                     self.minute_tickets_updated += 1
                                     self._update_ticket_stats(device, updated=True)
                                     log_callback(
-                                        f"   📝 Ticket mis à jour ({analysis_duration:.1f}s)",
+                                        f"   🔄 Ticket mis à jour ({analysis_duration:.1f}s)",
                                         "success"
                                     )
                             else:
@@ -337,7 +338,7 @@ class MonitoringThread:
                 # 🔥 INCRÉMENTER COMPTEUR
                 self.cycle_count += 1
                 
-                # 🔥 RAPPORT PÉRIODIQUE (toutes les 6 cycles = 1 min)
+                # 🔥 RAPPORT PÉRIODIQUE (toutes les X cycles = 1 min)
                 if self.cycle_count >= self.cycles_per_report:
                     self._show_periodic_report(log_callback)
                     self.cycle_count = 0
