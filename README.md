@@ -6,8 +6,7 @@ Moniteur intelligent de logs Windows (ForwardedEvents) et Syslog avec analyse au
 ✨ Sources de logs multiples
 
 ForwardedEvents (EVTX) : Événements Windows centralisés avec détection en temps réel
-Syslog : Logs d'équipements réseau (Stormshield, Switch, WiFi) avec analyse agressive
-Archives Syslog : Historique complet des logs réseau
+Syslog : Logs d'équipements réseau (Stormshield, Switches, WiFi) avec analyse agressive
 Logs locaux : Fichiers .log personnalisés
 
 🤖 Analyse IA avancée (SANS TIMEOUT)
@@ -16,12 +15,13 @@ Ollama local (prioritaire) : Analyse rapide et privée sans limitation de temps
 API de repli : Groq, Claude, OpenAI si Ollama indisponible
 Interface web Ollama : Intégration directe à localhost:3000 ou 192.168.10.110:3000
 ⚡ NOUVEAU v4.0 : Suppression du timeout pour analyses approfondies
+🛑 Arrêt immédiat : Interruption propre des analyses IA en cours
 
 🎨 Interface moderne et ergonomique
 
 Mode clair/sombre : Basculement instantané avec sauvegarde des préférences
 Console multi-sources : Logs colorés et structurés en temps réel
-Console IA dédiée : Journal séparé pour les analyses IA
+Console IA dédiée : Journal séparé pour les analyses IA (onglet "🤖 Analyses IA")
 Base de données hiérarchique : Organisation par Catégorie > Event_ID > Tickets
 Détails enrichis : Rapports d'incidents complets avec solutions actionnables
 Affichage du chemin : Visualisation permanente du fichier sélectionné
@@ -29,16 +29,16 @@ Affichage du chemin : Visualisation permanente du fichier sélectionné
 🚨 Détection d'intrusion AGRESSIVE (v4.0)
 
 15 patterns d'intrusion : Détection garantie des tentatives d'accès non autorisés
-Seuil abaissé : Capture des événements dès priorité 6 (au lieu de 7)
+Seuil optimisé : Capture des événements importants (priorité ≥ 5)
 Boost firewall : +2 points de priorité pour les événements de sécurité
 Indicateurs multiples : Authentication failed, access denied, brute force, port scan...
-Statistiques en temps réel : Compteurs d'intrusions et événements haute priorité
+Surveillance 100% silencieuse : Rapports toutes les 60 secondes, logs seulement si menaces détectées
 
 📊 Organisation intelligente
 
 Catégorisation automatique : Par type d'appareil avec boost de priorité
 Priorisation 1-10 : Des incidents critiques aux informations
-Regroupement intelligent : Évite les doublons, regroupe les incidents similaires
+Regroupement intelligent : Évite les doublons (fenêtre de 30 min), regroupe les incidents similaires
 Filtrage avancé : Mots-clés, Event IDs critiques, recherche en temps réel
 Structure hiérarchique : Catégorie/Event_ID/Tickets pour une navigation intuitive
 
@@ -46,26 +46,28 @@ Structure hiérarchique : Catégorie/Event_ID/Tickets pour une navigation intuit
 📁 Structure du projet
 C:\IA\
 ├── Code\
-│   ├── main.py                      # Interface graphique principale
+│   ├── main.py                      # Interface graphique principale ⭐ CORRIGÉ
 │   ├── config.py                    # Configuration production
-│   ├── config_debug.py              # Configuration debug ⭐ NOUVEAU
-│   ├── enhanced_ai_analyzer.py      # Analyseur IA SANS TIMEOUT ⭐ AMÉLIORÉ
-│   ├── unified_log_reader.py        # Lecteur multi-sources unifié
-│   ├── event_reader.py              # Lecteur ForwardedEvents avec détection temps réel ⭐ CORRIGÉ
-│   ├── syslog_reader.py             # Lecteur Syslog AGRESSIF ⭐ CORRIGÉ
-│   ├── syslog_debug.py              # Outil de diagnostic Syslog ⭐ NOUVEAU
-│   ├── syslog_analyzer.py           # Analyseur intelligent Syslog ⭐ NOUVEAU
-│   ├── event_filter.py              # Filtre avec priorisation renforcée ⭐ AMÉLIORÉ
+│   ├── enhanced_ai_analyzer.py      # Analyseur IA avec arrêt immédiat ⭐ CORRIGÉ
+│   ├── unified_log_reader.py        # Lecteur multi-sources silencieux ⭐ CORRIGÉ
+│   ├── event_reader.py              # Lecteur ForwardedEvents (gestion fichiers verrouillés) ⭐ CORRIGÉ
+│   ├── syslog_reader.py             # Lecteur Syslog avec diagnostics étendus ⭐ CORRIGÉ
+│   ├── event_filter.py              # Filtre avec classification Syslog auto ⭐ AMÉLIORÉ
 │   ├── ticket_manager.py            # Gestionnaire structure hiérarchique ⭐ CORRIGÉ
+│   ├── device_detector.py           # Détecteur centralisé d'appareils ⭐ CORRIGÉ
+│   ├── monitoring_thread.py         # Surveillance silencieuse + rapports minute ⭐ CORRIGÉ
 │   ├── ticket_tree_view.py          # Vue arborescente Catégorie/Event/Ticket
 │   ├── ticket_operations.py         # Opérations sur tickets (export, copie...)
-│   ├── monitoring_thread.py         # Thread de surveillance continue
 │   ├── console_manager.py           # Gestionnaire des consoles
 │   ├── tab_creators.py              # Création des onglets
 │   ├── gui_components.py            # Composants interface (StatusBar, Footer...)
-│   ├── web_searcher.py              # Recherche web de solutions
 │   ├── theme_manager.py             # Gestionnaire de thèmes
-│   └── launcher.pyw                 # Lanceur silencieux
+│   ├── web_searcher.py              # Recherche web de solutions
+│   ├── launcher.pyw                 # Lanceur silencieux
+│   │
+│   ├── syslog_debug.py              # Outil de diagnostic Syslog ⭐ NOUVEAU
+│   ├── syslog_analyzer.py           # Analyseur intelligent avec filtrage avancé ⭐ NOUVEAU
+│   └── syslog_diagnostic.py         # Script de diagnostic complet ⭐ NOUVEAU
 │
 ├── JournalTransfert\
 │   └── ForwardedEvents.evtx         # Logs Windows centralisés
@@ -73,14 +75,16 @@ C:\IA\
 ├── Tickets\                          # Tickets générés (hiérarchique)
 │   ├── Serveur AD\
 │   │   ├── Event_1234\
-│   │   │   ├── ticket_2025-01-09_Source1.txt
-│   │   │   └── ticket_2025-01-09_Source2.txt
+│   │   │   ├── ticket_2025-01-09_xxx.txt
+│   │   │   └── ticket_2025-01-10_xxx.txt
 │   │   └── Event_4625\
 │   ├── Stormshield\
 │   │   ├── Event_7000\
 │   │   └── Event_8000\
-│   ├── Switch\
-│   └── ...
+│   ├── Switch Principal\
+│   ├── Borne WiFi\
+│   ├── Serveur IA\
+│   └── Autres\
 │
 ├── Logs\                             # Logs locaux optionnels
 │
@@ -93,7 +97,7 @@ Python 3.8+
 Ollama installé et démarré (recommandé)
 Bibliothèques Python :
 
-bashpip install pywin32 requests beautifulsoup4
+bash  pip install pywin32 requests beautifulsoup4
 Configuration Ollama
 
 Installer Ollama :
@@ -104,13 +108,13 @@ Installer sur votre serveur IA
 
 Télécharger un modèle :
 
-bashollama pull llama3.2
-# ou
-ollama pull mistral
+bash   ollama pull llama3.2
+   # ou
+   ollama pull mistral
 
 Démarrer Ollama :
 
-bashollama serve
+bash   ollama serve
 
 Vérifier l'accès :
 
@@ -124,8 +128,8 @@ Si Ollama est sur un autre serveur (ex: 192.168.10.110) :
 
 Modifier config.py :
 
-pythonOLLAMA_API_URL_ALT = "http://192.168.10.110:11434"
-OLLAMA_WEB_URL_ALT = "http://192.168.10.110:3000"
+python   OLLAMA_API_URL_ALT = "http://192.168.10.110:11434"
+   OLLAMA_WEB_URL_ALT = "http://192.168.10.110:3000"
 
 S'assurer que le port 11434 est ouvert dans le pare-feu
 
@@ -141,36 +145,22 @@ Ollama (SANS TIMEOUT v4.0)
 pythonOLLAMA_API_URL = "http://localhost:11434"
 OLLAMA_WEB_URL = "http://localhost:3000"
 OLLAMA_MODEL = "llama3.2:latest"  # Modèle à utiliser
-AI_TIMEOUT = None  # ⭐ NOUVEAU : Pas de timeout pour IA locale
+AI_TIMEOUT = 90  # Timeout pour API externes uniquement
 MAX_TOKENS = 2000
 Surveillance
-pythonPOLLING_INTERVAL = 60  # Vérification toutes les 60s
+pythonPOLLING_INTERVAL = 10  # Vérification toutes les 10s (temps réel)
 INITIAL_CHECK_HOURS = 24  # Analyse des 24 dernières heures
-MIN_PRIORITY_THRESHOLD = 4  # Seuil de priorité minimum
+MIN_PRIORITY_THRESHOLD = 5  # Seuil de priorité minimum
 ENABLE_ONLINE_SEVERITY_CHECK = True  # Vérification en ligne
-Appareils surveillés
+Appareils surveillés (6 équipements)
 pythonMONITORED_DEVICES = {
-    '192.168.1.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
-    '192.168.1.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
-    '192.168.1.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
+    '192.168.10.254': {'name': 'Stormshield UTM', 'type': 'firewall', 'icon': '🔥', 'priority_boost': 3},
+    '192.168.10.10': {'name': 'Active Directory', 'type': 'Server', 'icon': '🖥️', 'priority_boost': 2},
+    '192.168.10.110': {'name': 'Serveur-IA', 'type': 'Server', 'icon': '🤖', 'priority_boost': 1},
+    '192.168.10.15': {'name': 'Switch Principal', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
+    '192.168.10.16': {'name': 'Switch Secondaire', 'type': 'switch', 'icon': '🔌', 'priority_boost': 2},
+    '192.168.10.11': {'name': 'Borne WiFi', 'type': 'wifi', 'icon': '📡', 'priority_boost': 1}
 }
-Mode DEBUG (v4.0)
-Pour activer le mode debug avec paramètres optimisés pour les tests :
-
-Renommer temporairement :
-
-config.py → config_prod.py
-config_debug.py → config.py
-
-
-Paramètres debug :
-
-pythonPOLLING_INTERVAL = 30  # Réduit pour tests rapides
-INITIAL_CHECK_HOURS = 2  # Réduit de 24h à 2h
-MIN_PRIORITY_THRESHOLD = 3  # Abaissé pour capturer plus d'événements
-DEBUG_MODE = True  # Active les logs détaillés
-VERBOSE_SYSLOG = True  # Mode verbose pour Syslog
-VERBOSE_EVENTS = True  # Mode verbose pour ForwardedEvents
 
 🎮 Utilisation
 Démarrage
@@ -183,20 +173,21 @@ bashpythonw launcher.pyw
 
 ### Interface
 
-#### 1. Console multi-sources
+#### 1. 🖥️ Console multi-sources
 - Surveillance en temps réel de TOUS les événements
 - Logs colorés :
   - 🔴 Erreurs critiques
   - 🟠 Avertissements
   - 🟢 Succès
   - 🔵 Informations
-- Indicateurs de source (ForwardedEvents, Syslog, Archives...)
+- Indicateurs de source (ForwardedEvents, Syslog...)
 
 #### 2. 🤖 Analyses IA (NOUVEAU v4.0)
-- **Console dédiée** pour les analyses IA
+- **Console dédiée** pour les analyses IA (onglet séparé)
 - **Requêtes tracées** : Affichage de chaque demande IA
 - **Réponses colorées** : Succès (vert), Erreurs (rouge)
 - **Performances** : Durée et taille des analyses
+- **Arrêt propre** : Interruption immédiate possible
 
 #### 3. 📋 Base de données hiérarchique
 Structure à 3 niveaux :
@@ -206,7 +197,7 @@ Structure à 3 niveaux :
       └─ 📄 Tickets individuels
 ```
 
-Fonctionnalités :
+**Fonctionnalités** :
 - **Recherche en temps réel** : Filtrage instantané
 - **Affichage du chemin** : Visualisation permanente du fichier sélectionné
 - **Double-clic** : Ouverture dans l'onglet Détails
@@ -223,17 +214,37 @@ Fonctionnalités :
 
 | Bouton | Action |
 |--------|--------|
-| ▶️ Surveillance | Lance la surveillance continue |
-| ⏸️ Arrêter | Arrête la surveillance |
-| 🔄 Actualiser | Recharge la base de données |
-| 📅 Analyse 24h | Analyse les 24 dernières heures |
-| ⏹️ Arrêter vérif. | Stoppe l'analyse en cours |
-| 🗑️ Nettoyer | Supprime les tickets > 30 jours |
-| 🌙/☀️ Thème | Bascule mode clair/sombre |
+| ▶️ **Surveillance** | Lance la surveillance continue (10s) |
+| ⏸️ **Arrêter** | Arrête la surveillance |
+| 🔄 **Actualiser** | Recharge la base de données (sans analyse) |
+| 🔍 **Test 2h** | Analyse rapide des 2 dernières heures ⭐ NOUVEAU |
+| 📅 **Analyse 24h** | Analyse complète des 24 dernières heures |
+| ⏹️ **Arrêter vérif.** | Stoppe l'analyse en cours (arrêt immédiat) ⭐ AMÉLIORÉ |
+| 🗑️ **Nettoyer** | Supprime les tickets > 30 jours |
+| 🌙/☀️ **Thème** | Bascule mode clair/sombre |
+
+### ⭐ NOUVEAUTÉS v4.0 - Modes d'opération
+
+1. **▶️ Surveillance continue** (10 secondes)
+   - Scan permanent toutes les 10 secondes
+   - **100% silencieux** entre les rapports
+   - **Rapport toutes les 60 secondes** avec statistiques
+   - **Logs immédiats** uniquement si menaces détectées
+   - Idéal pour : Production, surveillance 24/7
+
+2. **🔍 Test 2h** (analyse ponctuelle)
+   - Scan des 2 dernières heures
+   - Rapide et informatif
+   - Idéal pour : Tests, vérifications rapides
+
+3. **📅 Analyse 24h** (analyse complète)
+   - Scan complet des 24 dernières heures
+   - Peut générer beaucoup d'événements
+   - Idéal pour : Audit initial, analyse post-incident
 
 ---
 
-## 🔍 Système de priorité (v4.0 RENFORCÉ)
+## 🔍 Système de priorité (v4.0 OPTIMISÉ)
 
 ### Niveaux de priorité (1-10)
 
@@ -316,23 +327,20 @@ Fonctionnalités :
 - **Catégorie appareil** :
   - Stormshield : +3 points
   - Serveur AD : +2 points
-  - Switch : +1 point
+  - Switches : +2 points
+  - Borne WiFi : +1 point
+  - Serveur IA : +1 point
 
-### Statistiques en temps réel
-```
-📊 RÉSULTAT SYSLOG (MODE AGRESSIVE):
-   • Total scanné: 1523 lignes
-   • Lignes avec IP surveillée: 342
+### Gestion des doublons (v4.0)
 
-   🚨 DÉTECTIONS:
-      🔴 Intrusions détectées: 15
-      🟠 Haute priorité: 28
-      📊 TOTAL CAPTURÉ: 43
-```
+- **Fenêtre de 30 min** pour événements standards
+- **Fenêtre de 20 min** pour haute priorité (≥7)
+- **Fenêtre de 10 min** pour événements critiques (≥9)
+- **Vérification isolée** : Ne bloque pas les événements suivants
 
 ---
 
-## 🤖 Analyse IA (v4.0 SANS TIMEOUT)
+## 🤖 Analyse IA (v4.0 SANS TIMEOUT + ARRÊT IMMÉDIAT)
 
 ### Priorité des fournisseurs
 
@@ -341,20 +349,24 @@ Fonctionnalités :
    - ✅ Privé (pas de données envoyées)
    - ✅ Gratuit
    - ✅ **SANS TIMEOUT** : Analyses approfondies illimitées
+   - ✅ **ARRÊT IMMÉDIAT** : Interruption propre garantie
    - ⚠️ Nécessite serveur local
 
 2. **Groq (repli 1)**
    - Très rapide
    - Gratuit (limité)
+   - Timeout: 60s
    - Nécessite clé API
 
 3. **Claude (repli 2)**
    - Très précis
+   - Timeout: 60s
    - Payant
    - Nécessite clé API
 
 4. **OpenAI (repli 3)**
    - Précis
+   - Timeout: 60s
    - Payant
    - Nécessite clé API
 
@@ -376,46 +388,25 @@ Chaque ticket contient :
 
 🔒 PRÉVENTION
    └─ Mesures pour éviter la récurrence
-```
 
-### Exemple de prompt IA
-```
-Tu es un expert en sécurité informatique. Analyse cette erreur et fournis une solution concrète.
-
-CONTEXTE DE L'INCIDENT:
-══════════════════════════════════════════════════════
-Type d'appareil: Stormshield (firewall)
-Source: 🔥 Stormshield (192.168.1.254)
-Event ID: 7000
-Type d'erreur: ERROR
-Horodatage: 2025-01-09 14:32:15
-Priorité: 9/10
-
-MESSAGE D'ERREUR:
-[asqd.err] Authentication failed from 10.0.0.5 (5 attempts)
-🔍 Détection: Échec d'authentification(9), fail(7)
-══════════════════════════════════════════════════════
-
-FOURNIS UNE ANALYSE STRUCTURÉE ET DÉTAILLÉE...
-
-📊 Catégories d'appareils
+📊 Catégories d'appareils (6 équipements surveillés)
 Les tickets sont automatiquement classés par catégorie :
-CatégorieIcônePriorité BoostMots-clésServeur AD🖥️+2DC, Active Directory, LDAP, Kerberos, DNSStormshield🔥+3192.168.1.254, Stormshield, firewall, utmSwitch🔌+1192.168.1.15, Switch, vlan, portBorne WiFi📡+1192.168.1.11, WiFi, SSID, wirelessServeur IA🤖+1Ollama, GPU, Machine Learning, IAServeurs💻+1Server, SRV-, Windows ServerAutres❓+0(par défaut)
+CatégorieIcônePriorité BoostTypeMots-clésServeur AD🖥️+2Windows192.168.10.10, DC, Active Directory, LDAP, Kerberos, DNSServeur IA🤖+1Windows192.168.10.110, Ollama, IA, Machine Learning, GPUStormshield🔥+3Syslog192.168.10.254, firewall, utm, asqdSwitch Principal🔌+2Syslog192.168.10.15, switch, vlan, portSwitch Secondaire🔌+2Syslog192.168.10.16, switch, vlan, portBorne WiFi📡+1Syslog192.168.10.11, WiFi, SSID, wireless, APAutres❓+0-(par défaut)
 
 🔧 Dépannage
 Ollama ne se connecte pas
 
 Vérifier qu'Ollama est démarré :
 
-bash# Windows
-tasklist | findstr ollama
-
-# Linux
-ps aux | grep ollama
+bash   # Windows
+   tasklist | findstr ollama
+   
+   # Linux
+   ps aux | grep ollama
 
 Tester manuellement :
 
-bashcurl http://localhost:11434/api/tags
+bash   curl http://localhost:11434/api/tags
 
 Vérifier le pare-feu :
 
@@ -433,7 +424,7 @@ ForwardedEvents :
 
 Vérifier que le fichier EVTX existe
 Vérifier les permissions de lecture
-Utiliser config_debug.py pour paramètres optimisés
+Si fichier verrouillé (erreur 32) → Mode copie automatique activé
 
 Syslog :
 
@@ -449,33 +440,31 @@ Vérifier les IP surveillées dans MONITORED_DEVICES
 
 Filtrage :
 
-Abaisser MIN_PRIORITY_THRESHOLD à 3 dans config.py
-Activer le mode verbose :
+Vérifier MIN_PRIORITY_THRESHOLD dans config.py (défaut: 5)
+Utiliser 🔍 Test 2h pour vérification rapide
 
-python   VERBOSE_SYSLOG = True
-   VERBOSE_EVENTS = True
 Intrusions non détectées (v4.0)
 
 Lancer le diagnostic Syslog :
 
-bashpython syslog_debug.py
+bash   python syslog_debug.py
 ```
-
-Résultat attendu :
+   
+   Résultat attendu :
 ```
-🚨 INTRUSIONS POTENTIELLES DÉTECTÉES: X
-
-[1] 🚨 INTRUSION POTENTIELLE #1
-────────────────────────────────────
-⏰ Timestamp: Jan 9 14:32:15
-🔍 IP Source: 192.168.1.254
-🏷️ Facility: asqd
-⚠️ Severity: ERR
-🔑 Mots-clés trouvés: fail, authentication, denied
+   🚨 INTRUSIONS POTENTIELLES DÉTECTÉES: X
+   
+   [1] 🚨 INTRUSION POTENTIELLE #1
+   ────────────────────────────────────
+   ⏰ Timestamp: Jan 9 14:32:15
+   🔍 IP Source: 192.168.10.254
+   🏷️ Facility: asqd
+   ⚠️ Severity: ERR
+   🔑 Mots-clés trouvés: fail, authentication, denied
 
 Tester une ligne spécifique :
 
-bashpython syslog_debug.py --test-line "192.168.1.254 Jan 9 14:32:15 asqd err authentication failed"
+bash   python syslog_debug.py --test-line "192.168.10.254 Jan 9 14:32:15 asqd err authentication failed"
 
 Vérifier les patterns dans syslog_reader.py :
 
@@ -488,11 +477,11 @@ Tickets non créés
 
 Vérifier les permissions :
 
-bashicacls C:\IA\Tickets
+bash   icacls C:\IA\Tickets
 
 Vérifier l'espace disque :
 
-bashdir C:\IA\Tickets
+bash   dir C:\IA\Tickets
 
 Consulter les consoles :
 
@@ -500,6 +489,18 @@ Console principale pour les événements
 Console IA pour les analyses
 
 
+
+Surveillance silencieuse (v4.0)
+Comportement normal :
+
+✅ Aucun log pendant 60 secondes
+✅ Rapport automatique toutes les minutes
+✅ Logs immédiats si menace détectée
+
+Si aucun rapport après 60s :
+
+Vérifier que la surveillance est démarrée (▶️ Surveillance)
+Consulter la console pour erreurs éventuelles
 
 
 📝 Automatisation
@@ -563,15 +564,16 @@ SANS TIMEOUT : Analyses approfondies garanties
 
 Filtrage :
 
-Ajuster MIN_PRIORITY_THRESHOLD
+Ajuster MIN_PRIORITY_THRESHOLD (défaut: 5)
 Affiner les mots-clés dans CRITICAL_KEYWORDS
 Utiliser les patterns d'intrusion
 
 
 Polling :
 
-Augmenter POLLING_INTERVAL si faible activité
-Diminuer pour surveillance intensive
+10 secondes : Détection temps réel optimale
+Rapports toutes les 60 secondes
+Surveillance 100% silencieuse
 
 
 
@@ -593,14 +595,15 @@ Fichiers importants
 
 C:\IA\historique.json : État de surveillance
 C:\IA\Tickets\.ticket_index.json : Index des tickets
+C:\IA\.syslog_state.json : État Syslog
 Console principale : Logs en temps réel
 Console IA : Analyses IA tracées
 
 Outils de diagnostic (v4.0)
 
-syslog_debug.py : Diagnostic complet Syslog
-config_debug.py : Configuration optimisée pour tests
-syslog_analyzer.py : Analyseur intelligent
+syslog_debug.py : Diagnostic complet Syslog avec détection d'intrusions
+syslog_diagnostic.py : Script de diagnostic par étapes
+syslog_analyzer.py : Analyseur intelligent avec filtrage avancé
 
 Contact
 Pour toute question ou problème, consultez :
@@ -614,85 +617,39 @@ Documentation pywin32
 Ce projet est fourni tel quel, sans garantie. Utilisez-le à vos propres risques.
 
 🎉 Journal des modifications
-v4.0 (09/01/2025) 🚀
+v4.0 (16/01/2025) 🚀
 🔥 NOUVELLES FONCTIONNALITÉS MAJEURES
+Surveillance temps réel optimisée
+
+✨ Surveillance 100% silencieuse entre les rapports
+✨ Rapport toutes les 60 secondes avec statistiques détaillées
+✨ Logs immédiats uniquement si menaces détectées
+✨ 3 modes d'opération : Surveillance (10s), Test 2h, Analyse 24h
+✨ Détails par appareil dans chaque rapport
+
 Détection d'intrusion agressive
 
 ✨ 15 patterns d'intrusion avec détection garantie
-✨ Seuil abaissé à priorité 6 (au lieu de 7)
+✨ Seuil optimisé à priorité ≥ 5
 ✨ Boost +2 pour événements firewall/sécurité
 ✨ Statistiques en temps réel (intrusions, haute priorité)
 ✨ Indicateurs multiples dans les tickets
 
-Analyse IA sans limitation
+Analyse IA sans limitation + Arrêt immédiat
 
 ✨ Suppression du timeout pour Ollama local
-✨ Analyses approfondies illimitées
+✨ Arrêt immédiat garanti des analyses en cours
+✨ Fermeture propre des sessions HTTP
 ✨ Console IA dédiée avec traçage complet
-✨ Gestion intelligente de l'arrêt des analyses
+✨ Analyses approfondies illimitées (Ollama)
+✨ Timeout 60s pour API externes (Groq, Claude, OpenAI)
 
 Organisation hiérarchique
 
 ✨ Structure à 3 niveaux : Catégorie/Event_ID/Tickets
 ✨ Navigation intuitive dans la base de données
 ✨ Affichage permanent du chemin du fichier sélectionné
-✨ Vue arborescente avec compteurs
-
-Interface améliorée
-
-✨ Onglet "🤖 Analyses IA" séparé
-✨ Affichage du chemin avec informations détaillées
-✨ Opérations sur tickets (export, copie, ouverture dossier)
-✨ Thème clair/sombre persistant
-
-🔧 CORRECTIONS ET AMÉLIORATIONS
-EventReader (event_reader.py)
-
-🔧 Détection temps réel des nouveaux événements garantie
-🔧 Copie temporaire fraîche à chaque cycle
-🔧 Mise à jour correcte du last_record_number
-🔧 Affichage des nouveaux événements détectés
-
-SyslogReader (syslog_reader.py)
-
-🔧 Mode AGRESSIF avec 15 patterns d'intrusion
-🔧 Seuil abaissé pour capturer plus d'événements
-🔧 Boost automatique pour facility critique
-🔧 Détection garantie des tentatives d'accès non autorisés
-
-TicketManager (ticket_manager.py)
-
-🔧 Structure hiérarchique Catégorie/Event_ID/Tickets
-🔧 Création correcte des dossiers Event_ID
-🔧 Mise à jour avec historique des occurrences
-🔧 Regroupement par type d'événement
-
-EnhancedAIAnalyzer (enhanced_ai_analyzer.py)
-
-🔧 Suppression du timeout pour IA locale
-🔧 Gestion de l'arrêt des analyses en cours
-🔧 Prompts optimisés selon type d'appareil
-🔧 Fallback analysis amélioré
-
-🛠️ NOUVEAUX OUTILS
-
-✨ syslog_debug.py : Diagnostic complet des logs Syslog
-✨ syslog_analyzer.py : Analyseur intelligent avec filtrage avancé
-✨ config_debug.py : Configuration optimisée pour tests
-✨ ticket_operations.py : Module dédié aux opérations sur tickets
-✨ monitoring_thread.py : Thread de surveillance réutilisable
-✨ console_manager.py : Gestionnaire des consoles amélioré
-✨ tab_creators.py : Création modulaire des onglets
-
-📊 OPTIMISATIONS
-
-⚡ Détection temps réel des événements (plus de retard)
-⚡ Filtrage optimisé avec moins de faux positifs
-⚡ Structure hiérarchique pour navigation rapide
-
-🎨 Interface plus réactive et ergonomique
-
-🔍 Recherche en temps réel dans la base
+✨ Vue arborescente avec compt
 
 ### v3.0 (2025-01-07)
 - ✨ Intégration Ollama local prioritaire
