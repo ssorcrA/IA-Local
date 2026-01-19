@@ -1,0 +1,74 @@
+╔═══════════════════════════════════╗
+║  🖥️ SERVEUR AD - 🟡 🟡 MOYENNE 5/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-19 13:09:34
+📊 OCCURRENCES: 3
+🎯 PRIORITÉ: 🟡 MOYENNE 5/10
+📌 STATUT: 🟡 SURVEILLANCE
+
+╔═══════════════════════════════════╗
+║  IDENTIFICATION DE L'APPAREIL         ║
+╚═══════════════════════════════════╝
+
+🖥️ APPAREIL: Serveur Active Directory
+📢 IP: 192.168.10.10
+🏷️ NOM COURT: Serveur AD
+📂 DOSSIER: Serveur AD
+📝 DESCRIPTION: Contrôleur de domaine
+🔧 TYPE: WINDOWS
+
+╔═══════════════════════════════════╗
+║  DÉTAILS DE L'INCIDENT                ║
+╚═══════════════════════════════════╝
+
+📡 SOURCE: Serveur Active Directory (192.168.10.10)
+📋 TYPE: Windows Event
+🆔 EVENT ID: 45
+⚠️ CATÉGORIE: WARNING
+📢 SEVERITY: UNKNOWN
+📅 DÉTECTION: Mon Jan 19 12:31:36 2026
+
+─────────────────────────────────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 45 ) in Source ( 'Microsoft-Windows-ServerManager-ManagementProvider' ) could not be found. It contains the following insertion string(s):'NIS-Driver-WFP/Diagnostic, 0x8007065b, 0x80070715'.>
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+Analyse de l'erreur :
+
+L'erreur est un avertissement (WARNING) émis par le gestionnaire de serveur Windows Server, indiquant que le module de diagnostic NIS-Driver-WFP n'a pas pu être trouvé. L'erreur est associée à l'Event ID 45 et est provenante du source Microsoft-Windows-ServerManager-ManagementProvider.
+
+Les informations fournies sont les suivantes :
+
+* Type d'appareil : Windows Server
+* Ordinateur/IP : SRV-AD.DOMAD.axen
+* Date et heure de l'événement : Mon Jan 19 12:31:36 2026
+* Priorité de l'erreur : 5/10
+
+Les données fournies ne contiennent pas d'information spécifique sur la cause de l'erreur, mais elles indiquent que le problème est lié à un module de diagnostic qui n'a pas pu être trouvé.
+
+Solution immédiate :
+
+1. Vérifiez si le module de diagnostic NIS-Driver-WFP est installé et mis à jour sur votre système.
+2. Exécutez la commande `wsusutil /u` pour vérifier l'état du service Windows Update et assurer que les mises à jour sont disponibles.
+
+Solution complète :
+
+1. Vérifiez si le module de diagnostic NIS-Driver-WFP est installé sur votre système.
+2. Exécutez la commande `regsvr32 nis.dll` pour installer ou réinstaller le module de diagnostic.
+3. Exécutez la commande `wsusutil /u` pour activer les mises à jour du service Windows Update.
+
+Prévention :
+
+1. Assurez-vous que les mises à jour du système et des applications sont installées régulièrement.
+2. Vérifiez régulièrement l'état des modules de diagnostic pour éviter les erreurs similaires.
+3. Exécutez la commande `sfc /scannow` pour scanner le système et détecter les fichiers corrompus.
+
+Il est important de noter que ces étapes sont uniquement destinées à résoudre l'erreur spécifique mentionnée dans le message d'erreur. Il est recommandé de consulter le documentation du système et des applications installées pour obtenir plus d'informations sur les modules de diagnostic et les mises à jour disponibles.
+
+─────────────────────────────────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-19 15:02:27

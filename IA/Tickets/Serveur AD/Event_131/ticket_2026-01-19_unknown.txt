@@ -1,0 +1,88 @@
+╔═══════════════════════════════════╗
+║  🖥️ SERVEUR AD - 🟡 🟡 MOYENNE 6/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-19 08:50:19
+📊 OCCURRENCES: 1
+🎯 PRIORITÉ: 🟡 MOYENNE 6/10
+📌 STATUT: 🟡 SURVEILLANCE
+
+╔═══════════════════════════════════╗
+║  IDENTIFICATION DE L'APPAREIL         ║
+╚═══════════════════════════════════╝
+
+🖥️ APPAREIL: Serveur Active Directory
+📢 IP: 192.168.10.10
+🏷️ NOM COURT: Serveur AD
+📂 DOSSIER: Serveur AD
+📝 DESCRIPTION: Contrôleur de domaine
+🔧 TYPE: WINDOWS
+
+╔═══════════════════════════════════╗
+║  DÉTAILS DE L'INCIDENT                ║
+╚═══════════════════════════════════╝
+
+📡 SOURCE: Serveur Active Directory (192.168.10.10)
+📋 TYPE: Windows Event
+🆔 EVENT ID: 131
+⚠️ CATÉGORIE: ERROR
+📢 SEVERITY: UNKNOWN
+📅 DÉTECTION: Mon Jan 19 08:36:09 2026
+
+─────────────────────────────────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 131 ) in Source ( 'Microsoft-Windows-DeviceSetupManager' ) could not be found. It contains the following insertion string(s):'{0A568158-2954-F19C-89F3-03ACAEE1F85E}, 2147943568'.>
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+Analyse de l'erreur :
+
+L'erreur signalée est une erreur 131 de type Windows, attribuée à la source DeviceSetupManager. L'erreur indique que le message de description pour l'ID d'événement (131) dans la source 'Microsoft-Windows-DeviceSetupManager' n'a pas pu être trouvé.
+
+Analyse du problème :
+
+L'erreur 131 peut survenir lorsqu'une tentative est faite de configuration d'un appareil ou d'une carte réseau, mais le système ne parvient pas à trouver les informations nécessaires pour la configuration. Cela peut être causé par divers facteurs tels que :
+
+* Un problème de connexion au serveur Active Directory
+* Une erreur de configuration des paramètres du système
+* Un conflit avec d'autres applications ou services en cours d'exécution
+
+Impact sur le système :
+
+Cette erreur peut avoir un impact sur la fonctionnalité du système, notamment lorsqu'il est nécessaire de configurer de nouvelles cartes réseau ou appareils. Cependant, il est possible que l'erreur ne cause pas d'interruption totale du service.
+
+Solution immédiate :
+
+**Actions à faire maintenant :**
+
+1. Vérifiez les informations de connexion au serveur Active Directory pour vous assurer qu'elles sont correctes et mises à jour.
+2. Exécutez la commande `netsh int ip reset` pour réinitialiser les paramètres de configuration réseau.
+
+Solution complète :
+
+**Procédure détaillée pas à pas :**
+
+1. **Vérifiez les informations de connexion au serveur Active Directory** :
+ * Ouvrez le gestionnaire des utilisateurs et des ordinateurs (PowerShell) en tant que l'utilisateur administrateur.
+ * Exécutez la commande `Get-ADComputer -Identity SRV-AD.DOMAD.axen` pour vérifier les informations de connexion au serveur Active Directory.
+2. **Réinitialisez les paramètres de configuration réseau** :
+ * Ouvrez le gestionnaire des paramètres (PowerShell) en tant que l'utilisateur administrateur.
+ * Exécutez la commande `netsh int ip reset`.
+3. **Vérifiez les erreurs de configuration des paramètres du système** :
+ * Vérifiez les journaux d'erreur pour déterminer si il y a eu une erreur de configuration des paramètres du système.
+
+Prévention :
+
+**Mesures pour éviter la récurrence :**
+
+1. **Vérifiez régulièrement les informations de connexion au serveur Active Directory**.
+2. **Exécutez régulièrement la commande netsh int ip reset** pour maintenir les paramètres de configuration réseau à jour.
+3. **Surveillez les erreurs de configuration des paramètres du système** et corrigez-les promptement.
+
+En suivant ces étapes, vous devriez être en mesure de résoudre l'erreur 131 et prévenir la récurrence.
+
+─────────────────────────────────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-19 08:50:19

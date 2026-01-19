@@ -1,0 +1,80 @@
+╔═══════════════════════════════════╗
+║  🔥 STORMSHIELD - 🔴 🔴 CRITIQUE 10/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-19 08:17:19
+📊 OCCURRENCES: 13
+🎯 PRIORITÉ: 🔴 CRITIQUE 10/10
+📌 STATUT: 🔴 CRITIQUE - ACTION IMMÉDIATE
+
+╔═══════════════════════════════════╗
+║  IDENTIFICATION DE L'APPAREIL         ║
+╚═══════════════════════════════════╝
+
+🔥 APPAREIL: Stormshield UTM
+📢 IP: 192.168.10.254
+🏷️ NOM COURT: Stormshield
+📂 DOSSIER: Stormshield
+📝 DESCRIPTION: Pare-feu principal
+🔧 TYPE: FIREWALL
+
+╔═══════════════════════════════════╗
+║  DÉTAILS DE L'INCIDENT                ║
+╚═══════════════════════════════════╝
+
+📡 SOURCE: Stormshield UTM (192.168.10.254)
+📋 TYPE: Syslog (Réseau)
+🆔 EVENT ID: 6000
+⚠️ CATÉGORIE: ERROR
+📢 SEVERITY: WARNING
+📅 DÉTECTION: 2026-01-19 08:30:57
+
+─────────────────────────────────────────────────────────────────────────────────
+
+📄 MESSAGE:
+192.168.10.254	Jan 19 08:30:57	1	user	warning		2026-01-19T08:30:57+01:00 SN310A41KL181A7 asqd - - - ﻿id=firewall time="2026-01-19 08:30:57" fw="SN310A41KL181A7" tz=+0100 startime="2026-01-19 08:30:43" pri=4 confid=01 srcif="Ethernet1" srcifname="in" ipproto=udp proto=netbios-ns_udp src=192.168.10.110 srcport=137 srcportname=netbios-ns_udp srcname=SRV-IA srcmac=00:0c:29:b4:1c:ee dst=192.168.10.255 dstport=137 dstportname=netbios-ns_udp ipv=4 action=block msg="Port probe" class=protocol classifica...
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+**Analyse de l'erreur**
+
+L'erreur signalée par Stormshield UTM est un "Port probe" (expérience de test de port) qui bloque le trafic sur le protocole NetBIOS-NS UDP vers l'hôte 192.168.10.255. Ce type d'erreur peut être causé par divers facteurs tels que des scénarios de attaque ou des erreurs de configuration.
+
+**Solution immédiate**
+
+Pour résoudre ce problème immédiatement, il est recommandé de blocker le trafic sur le port 137 (NetBIOS-NS UDP) pour éviter la récurrence de l'erreur. Pour cela, on peut exécuter la commande suivante :
+
+`stormshield config set firewall-policy <policyprefix> block-protocol netbios-ns_udp`
+
+Remplacez `<policyprefix>` par un prénom de politique de sécurité qui vous convient.
+
+**Résolution complète**
+
+Pour une résolution complète, il est recommandé de suivre les étapes suivantes :
+
+1. **Vérifiez la configuration de NetBIOS-NS UDP** :
+ * Vérifiez si le protocole NetBIOS-NS UDP est activé sur l'hôte 192.168.10.255.
+ * Vérifiez si les paramètres de configuration sont corrects et cohérents avec les besoins de votre réseau.
+
+2. **Configurez la politique de sécurité** :
+ * Créez une nouvelle politique de sécurité qui inclut le protocole NetBIOS-NS UDP comme cible pour la blocking.
+ * Configurez l'hôte 192.168.10.255 comme source d'origine du trafic qui doit être bloqué.
+
+3. **Mettez à jour les paramètres de configuration** :
+ * Exécutez la commande `stormshield config set firewall-policy <policyprefix>` pour mettre à jour les paramètres de configuration.
+ * Vérifiez si les paramètres de configuration sont corrects et cohérents avec les besoins de votre réseau.
+
+4. **Testez la configuration** :
+ * Exécutez une vérification de la configuration en exécutant la commande `stormshield config check`.
+ * Vérifiez si la politique de sécurité est active et si le trafic sur le protocole NetBIOS-NS UDP est correctement bloqué.
+
+5. **Prévention** :
+ * Mettez à jour les paramètres de configuration régulièrement pour éviter la récurrence de l'erreur.
+ * Vérifiez régulièrement les logs de Stormshield UTM pour détecter tout problème ou erreur potentielle.
+
+En suivant ces étapes, vous devriez être en mesure de résoudre le problème et de prévenir la récurrence de l'erreur.
+
+─────────────────────────────────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-19 14:47:58

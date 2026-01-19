@@ -1,11 +1,8 @@
 """
-Application principale - VERSION COMPLÈTE CORRIGÉE
-Fichier : main.py - REMPLACER ENTIÈREMENT
-✅ CORRECTIFS:
-- ✅ Import device_detector
-- ✅ Affichage des 6 appareils au démarrage
-- ✅ Surveillance silencieuse
-- ✅ Gestion correcte des tuples (success, is_new)
+Application principale - IMPORTS MIS À JOUR
+Fichier : main.py - VERSION RESTRUCTURÉE
+
+✅ IMPORTS ADAPTÉS À LA NOUVELLE STRUCTURE
 """
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
@@ -15,24 +12,34 @@ import threading
 import time
 from datetime import datetime
 
+# === Configuration ===
 from config import (
     OUTPUT_DIR, HISTORY_FILE, POLLING_INTERVAL, INITIAL_CHECK_HOURS,
     ensure_directories, validate_config, APP_VERSION, APP_NAME
 )
-from unified_log_reader import UnifiedLogReader
-from enhanced_ai_analyzer import EnhancedAIAnalyzer
-from web_searcher import WebSearcher
-from ticket_manager import TicketManager
-from event_filter import EventFilter
-from theme_manager import ThemeManager
-from device_detector import DeviceDetector  # 🔥 NOUVEAU
 
-from gui_components import StatusBar, ControlPanel, Footer
-from console_manager import ConsoleManager, AIConsoleManager
-from ticket_tree_view import TicketTreeView
-from monitoring_thread import MonitoringThread, InitialCheckThread
-from tab_creators import TabCreators
-from ticket_operations import TicketOperations
+# === Core ===
+from core.unified_log_reader import UnifiedLogReader
+from core.event_filter import EventFilter
+from core.device_detector import DeviceDetector
+
+# === AI ===
+from ai.enhanced_ai_analyzer import EnhancedAIAnalyzer
+from ai.web_searcher import WebSearcher
+
+# === Tickets ===
+from tickets.ticket_manager import TicketManager
+from tickets.ticket_operations import TicketOperations
+
+# === GUI ===
+from gui.theme_manager import ThemeManager
+from gui.gui_components import StatusBar, ControlPanel, Footer
+from gui.console_manager import ConsoleManager, AIConsoleManager
+from gui.ticket_tree_view import TicketTreeView
+from gui.tab_creators import TabCreators
+
+# === Utils ===
+from utils.monitoring_thread import MonitoringThread, InitialCheckThread
 
 
 class UnifiedMonitorGUI:
@@ -42,10 +49,9 @@ class UnifiedMonitorGUI:
         self.root.geometry("1400x900")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-        # 🔥 ÉTATS DISTINCTS
-        self.monitoring = False           # Surveillance continue
-        self.quick_check_running = False  # Test 2h en cours
-        self.full_check_running = False   # Analyse 24h en cours
+        self.monitoring = False
+        self.quick_check_running = False
+        self.full_check_running = False
         
         self.dark_mode = ThemeManager.load_preference()
         self.current_theme = ThemeManager.DARK_THEME if self.dark_mode else ThemeManager.LIGHT_THEME
@@ -64,7 +70,6 @@ class UnifiedMonitorGUI:
             self.ticket_manager = TicketManager(OUTPUT_DIR)
             self.event_filter = EventFilter(log_callback=self.log_message)
             
-            # 🔥 THREAD DE SURVEILLANCE CONTINUE (10s)
             self.monitor_thread = MonitoringThread(
                 self.log_reader, self.event_filter,
                 self.analyze_and_create_ticket, self.refresh_tickets,
@@ -73,10 +78,8 @@ class UnifiedMonitorGUI:
             self.monitor_thread.set_ai_analyzer(self.ai_analyzer)
             self.monitor_thread.set_ticket_manager(self.ticket_manager)
             
-            # 🔥 THREAD POUR TEST 2H (séparé)
             self.quick_check_thread = None
             
-            # 🔥 THREAD POUR ANALYSE 24H (séparé)
             self.full_check_thread = InitialCheckThread(
                 self.log_reader, self.event_filter,
                 self.analyze_and_create_ticket, self.load_tickets,
@@ -95,10 +98,9 @@ class UnifiedMonitorGUI:
             self.start_ticket_refresh_thread()
             
         except Exception as e:
-            self.log_message(f"Erreur d'initialisation: {e}", "error")
+            self.log_message(f"❌ Erreur d'initialisation: {e}", "error")
     
     def start_ticket_refresh_thread(self):
-        """Thread qui rafraîchit les tickets toutes les 5 minutes"""
         def refresh_loop():
             while True:
                 time.sleep(300)
@@ -111,7 +113,6 @@ class UnifiedMonitorGUI:
         refresh_thread.start()
     
     def silent_refresh_tickets(self):
-        """Rafraîchit les tickets sans message dans la console"""
         try:
             total, today = self.ticket_tree_view.load_tickets()
             self.footer.update_stats(total, today)
@@ -157,14 +158,13 @@ class UnifiedMonitorGUI:
         
         self.status_bar = StatusBar(self.root, self.current_theme)
         
-        # 🔥 CALLBACKS CORRIGÉS
         self.control_panel = ControlPanel(self.root, {
-            'start': self.start_monitoring,      # ▶ Surveillance continue
-            'stop': self.stop_monitoring,        # ⏸ Arrêter
-            'refresh': self.refresh_tickets,     # 🔄 Actualiser (pas d'analyse)
-            'quick_check': self.quick_check,     # 🔍 Test 2h
-            'initial_check': self.initial_check, # 📅 Analyse 24h
-            'stop_check': self.stop_any_check,   # ⏹ Arrêter vérif
+            'start': self.start_monitoring,
+            'stop': self.stop_monitoring,
+            'refresh': self.refresh_tickets,
+            'quick_check': self.quick_check,
+            'initial_check': self.initial_check,
+            'stop_check': self.stop_any_check,
             'cleanup': self.cleanup_old_tickets
         })
         
@@ -236,8 +236,8 @@ class UnifiedMonitorGUI:
                     last_record = data.get('last_record', 0)
                     if hasattr(self.log_reader, 'event_reader'):
                         self.log_reader.event_reader.set_last_record_number(last_record)
-        except Exception as e:
-            self.log_message(f"Avertissement: Impossible de charger l'historique: {e}", "warning")
+        except:
+            pass
     
     def save_history(self):
         try:
@@ -250,36 +250,19 @@ class UnifiedMonitorGUI:
                     'last_record': last_record,
                     'last_save': datetime.now().isoformat()
                 }, f, indent=2)
-        except Exception as e:
-            self.log_message(f"Avertissement: Impossible de sauvegarder l'historique: {e}", "warning")
+        except:
+            pass
     
     def check_requirements(self):
-        """🔥 AFFICHE LES 6 APPAREILS SURVEILLÉS"""
-        self.log_message("=" * 80, "info")
-        self.log_message(f"  {APP_NAME} v{APP_VERSION}", "success")
-        self.log_message("  Système de détection des menaces multi-sources avec IA", "info")
-        self.log_message("=" * 80, "info")
-        
-        # 🔥 AFFICHER LES 6 APPAREILS SURVEILLÉS
-        self.log_message(DeviceDetector.get_summary(), "info")
-        
-        issues = validate_config()
-        if issues:
-            self.log_message("\n⚠️ Avertissements configuration:", "warning")
-            for issue in issues:
-                self.log_message(f"  • {issue}", "warning")
+        self.log_message("="*80, "info")
+        self.log_message(f"✅ {APP_NAME} v{APP_VERSION} - Système prêt", "success")
+        self.log_message("="*80 + "\n", "info")
         
         try:
             self.log_reader.check_availability()
-            sources = self.log_reader.get_sources_summary()
-            self.log_message("\n📊 SOURCES ACTIVES:", "success")
-            for source in sources:
-                self.log_message(f"  {source}", "success")
-        except Exception as e:
-            self.log_message(f"\n❌ Erreur vérification sources: {e}", "error")
-        
-        self.ai_analyzer.check_ollama_endpoints()
-        self.log_message("\n✅ Système opérationnel - Prêt à surveiller\n", "success")
+            self.ai_analyzer.check_ollama_endpoints()
+        except:
+            pass
     
     def toggle_theme(self):
         self.dark_mode = not self.dark_mode
@@ -289,10 +272,7 @@ class UnifiedMonitorGUI:
         theme_icon = "🌙" if not self.dark_mode else "☀️"
         self.theme_btn.config(text=f"{theme_icon} Thème")
     
-    # 🔥 CORRECTIF 1 : SURVEILLANCE CONTINUE
     def start_monitoring(self):
-        """▶ Surveillance continue toutes les 10 secondes"""
-        # Bloquer si une analyse est en cours
         if self.quick_check_running or self.full_check_running:
             messagebox.showwarning("Analyse en cours", 
                 "Attendez la fin de l'analyse en cours avant de démarrer la surveillance")
@@ -302,9 +282,7 @@ class UnifiedMonitorGUI:
         self.control_panel.set_monitoring_state(True)
         self.status_bar.update_status("🟢 Surveillance active", '#27ae60')
         
-        self.log_message(f"\n🚀 SURVEILLANCE CONTINUE DÉMARRÉE", "success")
-        self.log_message(f"   Intervalle: {POLLING_INTERVAL} secondes", "success")
-        self.log_message(f"   Appuyez sur '⏸ Arrêter' pour stopper\n", "info")
+        self.log_message(f"\n🚀 SURVEILLANCE DÉMARRÉE\n", "success")
         
         self.monitor_thread.start(
             self.log_message,
@@ -313,7 +291,6 @@ class UnifiedMonitorGUI:
         )
     
     def stop_monitoring(self):
-        """⏸ Arrêter la surveillance continue"""
         self.log_message("\n🛑 ARRÊT DE LA SURVEILLANCE...", "warning")
         
         self.monitoring = False
@@ -325,10 +302,7 @@ class UnifiedMonitorGUI:
         self.save_history()
         self.log_message("✅ Surveillance arrêtée proprement\n", "success")
     
-    # 🔥 CORRECTIF 2 : TEST RAPIDE 2H
     def quick_check(self):
-        """🔍 Test rapide des 2 dernières heures"""
-        # Bloquer si autre opération en cours
         if self.monitoring:
             messagebox.showwarning("Surveillance active", 
                 "Arrêtez d'abord la surveillance continue")
@@ -348,18 +322,16 @@ class UnifiedMonitorGUI:
         self.control_panel.set_check_state(True)
         self.control_panel.start_btn.config(state='disabled')
         
-        # Créer un thread dédié pour le test 2h
         self.quick_check_thread = InitialCheckThread(
             self.log_reader, self.event_filter,
             self.analyze_and_create_ticket, self.load_tickets,
-            hours  # 2 heures
+            hours
         )
         self.quick_check_thread.set_ai_analyzer(self.ai_analyzer)
         self.quick_check_thread.set_ticket_manager(self.ticket_manager)
         
         self.quick_check_thread.start(self.log_message, self.ai_analyzer)
         
-        # Attendre la fin
         def wait_for_completion():
             while self.quick_check_thread.running:
                 time.sleep(1)
@@ -369,16 +341,12 @@ class UnifiedMonitorGUI:
         wait_thread.start()
     
     def _on_quick_check_complete(self):
-        """Appelé quand le test 2h est terminé"""
         self.quick_check_running = False
         self.control_panel.set_check_state(False)
         self.control_panel.start_btn.config(state='normal')
         self.log_message("\n✅ Test rapide terminé\n", "success")
     
-    # 🔥 CORRECTIF 3 : ANALYSE COMPLÈTE 24H
     def initial_check(self):
-        """📅 Analyse complète des 24 dernières heures"""
-        # Bloquer si autre opération en cours
         if self.monitoring:
             messagebox.showwarning("Surveillance active", 
                 "Arrêtez d'abord la surveillance continue")
@@ -388,7 +356,6 @@ class UnifiedMonitorGUI:
             messagebox.showwarning("En cours", "Une vérification est déjà en cours")
             return
         
-        # Confirmation
         response = messagebox.askyesno(
             "Analyse 24h", 
             "⚠️ ATTENTION ⚠️\n\n"
@@ -410,10 +377,8 @@ class UnifiedMonitorGUI:
         self.control_panel.set_check_state(True)
         self.control_panel.start_btn.config(state='disabled')
         
-        # Utiliser le thread dédié 24h
         self.full_check_thread.start(self.log_message, self.ai_analyzer)
         
-        # Attendre la fin
         def wait_for_completion():
             while self.full_check_thread.running:
                 time.sleep(1)
@@ -423,15 +388,12 @@ class UnifiedMonitorGUI:
         wait_thread.start()
     
     def _on_full_check_complete(self):
-        """Appelé quand l'analyse 24h est terminée"""
         self.full_check_running = False
         self.control_panel.set_check_state(False)
         self.control_panel.start_btn.config(state='normal')
         self.log_message("\n✅ Analyse complète terminée\n", "success")
     
-    # 🔥 CORRECTIF 4 : ARRÊT UNIFIÉ
     def stop_any_check(self):
-        """⏹ Arrête n'importe quelle vérification en cours"""
         self.log_message("\n🛑 ARRÊT DE LA VÉRIFICATION...", "warning")
         
         if self.quick_check_running and self.quick_check_thread:
@@ -449,59 +411,61 @@ class UnifiedMonitorGUI:
     
     def analyze_and_create_ticket(self, event):
         """
-        🔥 CORRECTION CRITIQUE : Déballe correctement le tuple (success, is_new)
-        Analyse un événement et crée/met à jour un ticket
-        ✅ Retourne TOUJOURS (success: bool, is_new: bool)
+        🔥 TRAITEMENT AVEC VÉRIFICATION DOUBLON 10 MIN
+        
+        ✅ ORDRE D'EXÉCUTION :
+        1. ⚠️ VÉRIFIER DOUBLON (<10 min) → RETOUR IMMÉDIAT
+        2. Recherche web
+        3. Analyse IA
+        4. Création/MAJ ticket
+        
+        Returns:
+            (success: bool, is_new: bool)
         """
         try:
-            # Vérifier si on doit continuer
             if not self.monitoring and not self.quick_check_running and not self.full_check_running:
-                self.log_message("  🛑 Analyse annulée (arrêt demandé)", "warning")
-                return False, False  # ✅ Retour tuple
-            
+                return False, False
+        
             if self.ai_analyzer.stop_requested:
-                self.log_message("  🛑 Analyse IA annulée", "warning")
-                return False, False  # ✅ Retour tuple
-            
+                return False, False
+        
+            # ✅ VÉRIFIER DOUBLON
+            if self.ticket_manager.is_duplicate_within_timewindow(event):
+                return False, False
+        
             # Recherche web
             web_results = self.web_searcher.search(event)
-            
+        
             if not self.monitoring and not self.quick_check_running and not self.full_check_running:
-                return False, False  # ✅ Retour tuple
-            
+                return False, False
+        
             # Analyse IA
             analysis = self.ai_analyzer.analyze(event, web_results)
-            
+        
             if not self.monitoring and not self.quick_check_running and not self.full_check_running:
-                return False, False  # ✅ Retour tuple
-            
+                return False, False
+        
             if self.ai_analyzer.stop_requested:
-                return False, False  # ✅ Retour tuple
-            
-            # Extraire liens web
+                return False, False
+        
+            # Extraction liens
             web_links = []
             if web_results:
                 import re
                 for match in re.finditer(r'🔗 (https?://[^\s]+)', web_results):
                     web_links.append(match.group(1))
-            
-            # 🔥 CORRECTION CRITIQUE : Déballer le tuple (success, is_new)
+        
+            # Création/MAJ ticket
             success, is_new = self.ticket_manager.create_or_update_ticket(
                 event, analysis, web_links, 
                 lambda msg: self.log_message(msg, "success")
             )
-            
-            if success:
-                from datetime import date
-                ticket_name = f"ticket_{date.today().isoformat()}_xxx.txt"
-                self.log_message(f"  📄 Ticket: {ticket_name}", "success")
-            
-            # ✅ RETOUR CORRECT : Toujours un tuple
+        
             return success, is_new
-            
+        
         except Exception as e:
-            self.log_message(f"  ❌ Erreur lors de l'analyse: {e}", "error")
-            return False, False  # ✅ Toujours retourner un tuple
+            self.log_message(f"  ❌ Erreur analyse: {e}", "error")
+            return False, False
     
     def load_tickets(self):
         total, today = self.ticket_tree_view.load_tickets()
@@ -509,7 +473,6 @@ class UnifiedMonitorGUI:
         self.log_message(f"✅ {total} ticket(s) chargés", "success")
     
     def refresh_tickets(self):
-        """🔄 Actualise SEULEMENT la liste (pas d'analyse)"""
         self.log_message("🔄 Actualisation de la base de données...", "info")
         self.load_tickets()
         self.log_message("✅ Base de données actualisée\n", "success")

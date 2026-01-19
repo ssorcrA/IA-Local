@@ -1,0 +1,16 @@
+# === Interface Graphique ===
+tkinter  # Inclus avec Python
+
+# === Événements Windows ===
+pywin32>=305
+
+# === Requêtes HTTP ===
+requests>=2.31.0
+
+# === Parsing Web (optionnel) ===
+beautifulsoup4>=4.12.0
+
+# === Analyse IA (optionnel) ===
+# anthropic>=0.18.0
+# openai>=1.12.0
+# groq>=0.4.0

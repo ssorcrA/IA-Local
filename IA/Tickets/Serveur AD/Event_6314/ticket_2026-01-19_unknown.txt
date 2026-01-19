@@ -1,0 +1,94 @@
+╔═══════════════════════════════════╗
+║  🖥️ SERVEUR AD - 🟡 🟡 MOYENNE 5/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-19 12:48:15
+📊 OCCURRENCES: 4
+🎯 PRIORITÉ: 🟡 MOYENNE 5/10
+📌 STATUT: 🟡 SURVEILLANCE
+
+╔═══════════════════════════════════╗
+║  IDENTIFICATION DE L'APPAREIL         ║
+╚═══════════════════════════════════╝
+
+🖥️ APPAREIL: Serveur Active Directory
+📢 IP: 192.168.10.10
+🏷️ NOM COURT: Serveur AD
+📂 DOSSIER: Serveur AD
+📝 DESCRIPTION: Contrôleur de domaine
+🔧 TYPE: WINDOWS
+
+╔═══════════════════════════════════╗
+║  DÉTAILS DE L'INCIDENT                ║
+╚═══════════════════════════════════╝
+
+📡 SOURCE: Serveur Active Directory (192.168.10.10)
+📋 TYPE: Windows Event
+🆔 EVENT ID: 6314
+⚠️ CATÉGORIE: WARNING
+📢 SEVERITY: UNKNOWN
+📅 DÉTECTION: Mon Jan 19 11:26:00 2026
+
+─────────────────────────────────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 6314 ) in Source ( 'Microsoft-Windows-GroupPolicy' ) could not be found. It contains the following insertion string(s):'2651501, false, 500, 0, 1, %%4113'.>
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+Analyse de l'erreur :
+
+L'erreur rapportée est liée au système d'exploitation Windows Server, spécifiquement à Group Policy, qui est utilisé pour gérer les paramètres et les politiques des comptes d'utilisateurs sur le réseau.
+
+**Diagnostique**
+
+- **Explication claire du problème :** L'erreur indique que la description de l'Event ID 6314 dans la source Microsoft-Windows-GroupPolicy n'a pas été trouvée. Cela suggère un problème avec les configurations ou les mises à jour des politiques groupales.
+  
+- **Impact sur le système :** Le niveau de priorité de cette erreur est modeste (5/10), ce qui signifie qu'elle n'est pas d'immédiatement critique pour l'activité du système, mais peut signaler un problème sous-jacent à surveiller.
+
+**Solution immédiate**
+
+Pour résoudre ce problème immédiatement :
+
+- **Actions à faire maintenant :**
+  - Vérifier les journaux de Group Policy et les logs d'événements pour trouver des informations supplémentaires sur l'erreur.
+  - Vérifier que toutes les mises à jour disponibles pour Group Policy sont installées et appliquées.
+
+**Résolution complète**
+
+Procédure détaillée pas à pas pour résoudre ce problème :
+
+1. **Vérification des configurations de Group Policy :**
+   - Ouvrez le gestionnaire de groupes.
+   - Vérifiez les politiques qui utilisent l'Event ID 6314 et assurez-vous qu'elles sont correctement configurées.
+
+2. **Mises à jour pour Group Policy :**
+   - Allez sur [Microsoft Update Catalog](https://www.microsoft.com/en-us/download/details.aspx?id=54765) ou utilisez le gestionnaire de mises à jour pour Windows Server.
+   - Téléchargez et installez les dernières mises à jour pour Group Policy.
+
+3. **Vérification des logiciels de groupe (GPOs) :**
+   - Assurez-vous que tous les logiciels de groupe sont à jour, car certaines versions peuvent contenir la correction de l'erreur signalée.
+   - Utilisez le gestionnaire de groupes pour vérifier les GPOs et mises à jour.
+
+4. **Nettoyage des registres :**
+   - Si la solution ci-dessus ne résout pas le problème, vous pouvez effectuer un nettoyage des registres pour Group Policy.
+     - Ouvrez l'éditeur de registre (regedit.exe).
+     - Recherchez les clés qui contiennent l'Event ID 6314 et supprimez ou modifiez leurs valeurs si nécessaire.
+
+5. **Configuration de la console d'administration :**
+   - Assurez-vous que votre console d'administration est configurée pour afficher tous les événements, notamment ceux liés à Group Policy.
+   - Vérifiez l'affichage des messages d'erreur dans la console d'administration.
+
+**Prévention**
+
+- **Suivi régulier :**
+  - Assurez-vous de suivre régulièrement les mises à jour pour Group Policy et d'exécuter les mises à jour.
+- **Conformité aux meilleures pratiques :**
+  - S'assurer que toutes les configurations sont conformes aux meilleures pratiques de sécurité et de gestion.
+
+En suivant ces étapes, vous devriez être en mesure de résoudre le problème lié à l'Event ID 6314 dans Group Policy.
+
+─────────────────────────────────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-19 14:58:14

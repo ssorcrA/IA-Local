@@ -1,0 +1,80 @@
+╔═══════════════════════════════════╗
+║  🖥️ SERVEUR AD - 🟡 🟡 MOYENNE 6/10  ║
+╚═══════════════════════════════════╝
+
+📅 CRÉÉ: 2026-01-19 08:20:08
+📊 OCCURRENCES: 9
+🎯 PRIORITÉ: 🟡 MOYENNE 6/10
+📌 STATUT: 🟡 SURVEILLANCE
+
+╔═══════════════════════════════════╗
+║  IDENTIFICATION DE L'APPAREIL         ║
+╚═══════════════════════════════════╝
+
+🖥️ APPAREIL: Serveur Active Directory
+📢 IP: 192.168.10.10
+🏷️ NOM COURT: Serveur AD
+📂 DOSSIER: Serveur AD
+📝 DESCRIPTION: Contrôleur de domaine
+🔧 TYPE: WINDOWS
+
+╔═══════════════════════════════════╗
+║  DÉTAILS DE L'INCIDENT                ║
+╚═══════════════════════════════════╝
+
+📡 SOURCE: Serveur Active Directory (192.168.10.10)
+📋 TYPE: Windows Event
+🆔 EVENT ID: 2051
+⚠️ CATÉGORIE: WARNING
+📢 SEVERITY: UNKNOWN
+📅 DÉTECTION: Mon Jan 19 07:53:00 2026
+
+─────────────────────────────────────────────────────────────────────────────────
+
+📄 MESSAGE:
+<The description for Event ID ( 2051 ) in Source ( 'Microsoft-Windows-SystemDataArchiver' ) could not be found. It contains the following insertion string(s):"[VolumeQuery] IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS failed with error 1 for volume path '\\\\?\\Volume{84dc68c0-eb9a-11f0-ae0d-806e6f6e6963}\\', skipping query of its disks.".>
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🤖 ANALYSE IA:
+Analyse de l'erreur :
+
+L'erreur signalée est liée au système de gestion de disques du Windows Server, spécifiquement à la fonctionnalité "VolumeQuery" qui permet d'afficher les informations sur les volumes disque. L'erreur 2051 indique que la requête pour récupérer les extensions des disques du volume spécifique a échoué avec un code d'erreur 1.
+
+Impact sur le système :
+
+Cette erreur peut avoir plusieurs conséquences, notamment :
+
+* La mise à jour manuelle de la configuration du système de gestion de disques
+* Les problèmes de lecture ou d'écrasement des données sur les volumes disque
+* Les erreurs lors de l'installation ou de la suppression de disques logiques
+
+Solution immédiate :
+
+Pour résoudre ce problème, il est recommandé de faire les étapes suivantes :
+
+1. Arrêter le service SystemDataArchiver et redémarrer le serveur.
+2. Exécuter la commande `powercfg -new-button "Réinitialiser disques" -description "Réinitialiser disques"` pour créer un nouveau bouton dans le menu de configuration de Windows.
+
+Réolution complète :
+
+Pour résoudre ce problème de manière permanente, il est recommandé de suivre les étapes suivantes :
+
+1. Vérifier si le volume disque est déjà en lecture et arrêter toute opération de lecture.
+2. Exécuter la commande `powercfg -new-button "Réinitialiser disques" -description "Réinitialiser disques"` pour créer un nouveau bouton dans le menu de configuration de Windows.
+3. Ouvrir le gestionnaire de services, aller sur l'onglet "Windows DataArchiver", sélectionner le service SystemDataArchiver et cliquer sur le bouton "Arrêter" pour arrêter le service.
+4. Redémarrer le serveur pour redémarrer le service SystemDataArchiver.
+
+Prévention :
+
+Pour éviter la récurrence de ce problème, il est recommandé de :
+
+* Vérifier régulièrement les erreurs du système de gestion de disques
+* Mettre à jour les drivers et les pilotes du système de gestion de disques
+* Éviter d'exécuter des commandes qui ont des effets négatifs sur le système de gestion de disques.
+
+Il est important de noter que ces étapes doivent être exécutées avec prudence, car elles peuvent avoir des effets sur l'ensemble du système. Il est recommandé de consulter les documentation officielles de Microsoft pour plus d'informations et de conseils.
+
+─────────────────────────────────────────────────────────────────────────────────
+
+⏰ MAJ: 2026-01-19 14:55:45
